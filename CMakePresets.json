@@ -1,0 +1,157 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "host-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "INSTANCE": "host",
+        "DRIVERS_INSTANCE": "host",
+        "DRIVER_IDS_INCLUDE_DIR": "${sourceDir}/include/driver_ids",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "host-debug",
+      "displayName": "Host Debug",
+      "inherits": "host-base",
+      "binaryDir": ".build-host-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "host-release",
+      "displayName": "Host Release",
+      "inherits": "host-base",
+      "binaryDir": ".build-host-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "stm32h563-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "INSTANCE": "stm32h563vit6x",
+        "DRIVERS_INSTANCE": "stm32h5xx",
+        "DRIVER_IDS_INCLUDE_DIR": "${sourceDir}/include/driver_ids",
+        "STM32CubeH5_ROOT": "${sourceDir}/third_party/STM32/STM32H5/STM32CubeH5",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/instances/stm32/toolchain.cmake",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "stm32h563-debug",
+      "displayName": "STM32H563 Debug",
+      "inherits": "stm32h563-base",
+      "binaryDir": ".build-stm32h563-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "stm32h563-release",
+      "displayName": "STM32H563 Release",
+      "inherits": "stm32h563-base",
+      "binaryDir": ".build-stm32h563-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "host-debug",
+      "configurePreset": "host-debug",
+      "jobs": 8,
+      "targets": [
+        "firmware"
+      ]
+    },
+    {
+      "name": "host-release",
+      "configurePreset": "host-release",
+      "jobs": 8,
+      "targets": [
+        "firmware"
+      ]
+    },
+    {
+      "name": "stm32h563-debug",
+      "configurePreset": "stm32h563-debug",
+      "jobs": 8,
+      "targets": [
+        "firmware"
+      ]
+    },
+    {
+      "name": "stm32h563-release",
+      "configurePreset": "stm32h563-release",
+      "jobs": 8,
+      "targets": [
+        "firmware"
+      ]
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "host-debug",
+      "displayName": "Host Debug (configure + build)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "host-debug"
+        },
+        {
+          "type": "build",
+          "name": "host-debug"
+        }
+      ]
+    },
+    {
+      "name": "host-release",
+      "displayName": "Host Release (configure + build)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "host-release"
+        },
+        {
+          "type": "build",
+          "name": "host-release"
+        }
+      ]
+    },
+    {
+      "name": "stm32h563-debug",
+      "displayName": "STM32H563 Debug (configure + build)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "stm32h563-debug"
+        },
+        {
+          "type": "build",
+          "name": "stm32h563-debug"
+        }
+      ]
+    },
+    {
+      "name": "stm32h563-release",
+      "displayName": "STM32H563 Release (configure + build)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "stm32h563-release"
+        },
+        {
+          "type": "build",
+          "name": "stm32h563-release"
+        }
+      ]
+    }
+  ]
+}

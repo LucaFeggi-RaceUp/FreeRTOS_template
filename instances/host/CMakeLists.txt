@@ -1,0 +1,60 @@
+set(FREERTOS_KERNEL_SOURCES
+  ${FREERTOS_KERNEL_DIR}/list.c
+  ${FREERTOS_KERNEL_DIR}/queue.c
+  ${FREERTOS_KERNEL_DIR}/tasks.c
+  ${FREERTOS_KERNEL_DIR}/timers.c
+  ${FREERTOS_KERNEL_DIR}/event_groups.c
+  ${FREERTOS_KERNEL_DIR}/stream_buffer.c
+)
+
+if(WIN32)
+  set(FREERTOS_PORT_DIR
+    ${FREERTOS_KERNEL_DIR}/portable/MSVC-MingW
+  )
+
+  set(FREERTOS_PORT_SOURCES
+    ${FREERTOS_PORT_DIR}/port.c
+  )
+
+  list(APPEND FIRMWARE_LINK_LIBRARIES
+    winmm
+  )
+
+  list(APPEND PLATFORM_DEFS
+    WIN32_LEAN_AND_MEAN
+  )
+else()
+  set(FREERTOS_PORT_DIR
+    ${FREERTOS_KERNEL_DIR}/portable/ThirdParty/GCC/Posix
+  )
+
+  set(FREERTOS_PORT_SOURCES
+    ${FREERTOS_PORT_DIR}/port.c
+    ${FREERTOS_PORT_DIR}/utils/wait_for_event.c
+  )
+
+  find_package(Threads REQUIRED)
+  list(APPEND FIRMWARE_LINK_LIBRARIES
+    Threads::Threads
+  )
+endif()
+
+set(FREERTOS_PORT_INCLUDE
+  ${FREERTOS_PORT_DIR}
+)
+
+set(FREERTOS_HEAP_FILE
+  ${FREERTOS_KERNEL_DIR}/portable/MemMang/heap_4.c
+)
+
+set(PLATFORM_MAIN
+  ${CMAKE_CURRENT_LIST_DIR}/main.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/freertos_impl.c
+)
+
+list(APPEND PLATFORM_DEFS
+  FREERTOS_CPU_CLOCK_HZ=100000000
+  FREERTOS_TICK_RATE_HZ=1000
+  configUSE_PORT_OPTIMISED_TASK_SELECTION=0
+  FREERTOS_HEAP_BYTES=65536
+)

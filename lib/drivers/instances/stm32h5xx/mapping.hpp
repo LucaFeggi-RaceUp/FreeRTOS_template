@@ -1,0 +1,26 @@
+#pragma once
+
+#include "stm32h5xx_hal.h"
+
+#define RU_STM32H5XX_GPIO_MAP(X)                                                        \
+
+#define RU_STM32H5XX_ADC_MAP(X)                                                         \
+
+
+#define RU_STM32H5XX_PWM_MAP(X)                                                         \
+
+
+#define RU_STM32H5XX_SERIAL_MAP(X)                                                      \
+  X(USB, USART1, GPIOA, GPIO_PIN_11, GPIOA, GPIO_PIN_10, GPIO_AF7_USART1)
+
+#define RU_STM32H5XX_M_CAN_MAP(X)                                                       \
+  X(CAN_2, FDCAN1, GPIOD, GPIO_PIN_0, GPIOD, GPIO_PIN_1, GPIO_AF9_FDCAN1)
+  
+#define RU_STM32H5XX_BX_CAN_MAP(X)                                                       \
+  X(CAN_2, FDCAN1, GPIOD, GPIO_PIN_0, GPIOD, GPIO_PIN_1, GPIO_AF9_FDCAN1)
+
+#define RU_STM32H5XX_EEPROM_MAP(X)                                                       \
+  X(EEPROM_0, 1U, 32U)
+
+#define RU_STM32H5XX_WATCHDOG_MAP(X)                                                     \
+  X(IWDG_0)
