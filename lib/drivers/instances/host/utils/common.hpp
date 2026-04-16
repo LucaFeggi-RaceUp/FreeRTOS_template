@@ -20,19 +20,21 @@ namespace ru::driver {
     log_with_timestamp(opaque_common_static.m_out, _oss.str()); \
   } while (0)
 
-template <typename T>
-  requires std::is_enum_v<T>
-constexpr auto raw_value(const T value) noexcept -> std::underlying_type_t<T> {
-  return static_cast<std::underlying_type_t<T>>(value);
+template <typename T,
+          typename std::enable_if<std::is_enum<T>::value, int>::type = 0>
+constexpr auto raw_value(const T value) noexcept ->
+    typename std::underlying_type<T>::type {
+  return static_cast<typename std::underlying_type<T>::type>(value);
 }
 
-template <typename T>
-  requires(!std::is_enum_v<T>)
+template <typename T,
+          typename std::enable_if<!std::is_enum<T>::value, int>::type = 0>
 constexpr T raw_value(const T value) noexcept {
   return value;
 }
 
-inline void log_with_timestamp(std::ostream& r_os, const auto& r_text) {
+template <typename T>
+inline void log_with_timestamp(std::ostream& r_os, const T& r_text) {
   using namespace std::chrono;
 
   auto now = system_clock::now();

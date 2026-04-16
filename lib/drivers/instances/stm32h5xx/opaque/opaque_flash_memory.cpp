@@ -125,7 +125,8 @@ result program_shadow() noexcept {
   return result::OK;
 }
 
-result with_unlocked_flash(const auto& operation) noexcept {
+template <typename Operation>
+result with_unlocked_flash(const Operation& operation) noexcept {
   if (HAL_FLASH_Unlock() != HAL_OK) {
     return result::RECOVERABLE_ERROR;
   }

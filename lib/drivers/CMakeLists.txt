@@ -147,7 +147,7 @@ target_compile_options(drivers
     ${DRIVERS_INSTANCE_COMPILE_OPTIONS}
 )
 
-target_compile_features(drivers PUBLIC cxx_std_20)
+target_compile_features(drivers PUBLIC cxx_std_17)
 
 target_link_libraries(drivers
   PUBLIC
