@@ -23,8 +23,8 @@ The template provides:
 - STM32H563 firmware builds.
 - FreeRTOS kernel integration.
 - STM32CubeH5 HAL and CMSIS integration.
-- Driver interfaces for GPIO, ADC, PWM, timers, serial, CAN, flash, EEPROM, and
-  watchdog.
+- Driver interfaces for GPIO, ADC, PWM, a monotonic clock, serial, CAN, flash,
+  EEPROM, and watchdog.
 
 Application code lives in `src`. Platform startup, linker scripts, toolchain
 setup, and MCU-specific boot code live in `instances`.
@@ -144,7 +144,7 @@ The STM32 target is selected through the `INSTANCE` CMake cache variable. The
 provided presets set this automatically to `stm32h563vit6x`.
 
 Clock and HAL initialization are owned by the STM32H5 common driver startup.
-The default STM32 `main.cpp` stays small: it starts the common, timer, and
+The default STM32 `main.cpp` stays small: it starts the common, clock, and
 serial drivers, calls `app_start()`, and starts the scheduler.
 
 USB CDC descriptors use neutral template defaults. Override

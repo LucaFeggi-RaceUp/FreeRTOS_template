@@ -10,6 +10,7 @@ namespace expected = std;
 namespace expected = tl;
 #endif
 
+// Timestamp units are defined by the API returning the value.
 using Timestamp = uint64_t;
 
 namespace ru::driver {

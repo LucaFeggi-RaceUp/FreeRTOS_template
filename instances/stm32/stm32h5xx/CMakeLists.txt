@@ -139,6 +139,7 @@ set(FREERTOS_KERNEL_FORCE_INCLUDE
 set(DRIVER_SOURCES
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/common.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/adc.cpp
+  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/clock.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/can.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/flash_memory.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/gpio.cpp
@@ -146,7 +147,6 @@ set(DRIVER_SOURCES
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/pwm.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/serial.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/spi.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/timer.cpp
 )
 
 set(LINKER_SCRIPT_FOLDER
