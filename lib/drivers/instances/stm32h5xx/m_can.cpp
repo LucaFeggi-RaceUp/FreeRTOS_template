@@ -4,6 +4,10 @@
 
 using namespace ru::driver;
 
+namespace {
+constexpr M_canId k_default_m_can_id = M_canId::CAN_1;
+}  // namespace
+
 namespace ru::driver {
 using namespace can_internal;
 
@@ -28,6 +32,22 @@ M_can::M_can(const M_canId id) noexcept : m_id(id), m_opaque(make_opaque(id)) {
 
 result M_can::start() noexcept {
   return result::OK;
+}
+
+result M_can::configure(const CanControllerConfig& config) noexcept {
+  return configure(k_default_m_can_id, config);
+}
+
+result M_can::configure(const M_canId id, const CanControllerConfig& config) noexcept {
+  return configure_controller(make_opaque(id), config);
+}
+
+CanControllerConfig M_can::configuration() noexcept {
+  return configuration(k_default_m_can_id);
+}
+
+CanControllerConfig M_can::configuration(const M_canId id) noexcept {
+  return current_controller_config(make_opaque(id));
 }
 
 result M_can::init() noexcept {
@@ -131,10 +151,15 @@ result M_can::set_filter(M_filter filter, uint8_t id) {
     return result::UNRECOVERABLE_ERROR;
   }
 
+  const auto status = with_stopped_controller(
+      m_opaque, [&]() noexcept { return configure_m_filter(m_opaque, filter, id, true); });
+  if (status != result::OK) {
+    return status;
+  }
+
   m_filters(m_opaque)[id] = filter;
   m_filter_enabled(m_opaque)[id] = true;
-  return with_stopped_controller(
-      m_opaque, [&]() noexcept { return configure_m_filter(m_opaque, filter, id, true); });
+  return result::OK;
 }
 
 result M_can::enable_filter(uint8_t id) {
@@ -145,10 +170,15 @@ result M_can::enable_filter(uint8_t id) {
     return result::RECOVERABLE_ERROR;
   }
 
-  m_filter_enabled(m_opaque)[id] = true;
-  return with_stopped_controller(m_opaque, [&]() noexcept {
+  const auto status = with_stopped_controller(m_opaque, [&]() noexcept {
     return configure_m_filter(m_opaque, m_filters(m_opaque)[id].value(), id, true);
   });
+  if (status != result::OK) {
+    return status;
+  }
+
+  m_filter_enabled(m_opaque)[id] = true;
+  return result::OK;
 }
 
 result M_can::disable_filter(uint8_t id) {
@@ -159,10 +189,15 @@ result M_can::disable_filter(uint8_t id) {
     return result::RECOVERABLE_ERROR;
   }
 
-  m_filter_enabled(m_opaque)[id] = false;
-  return with_stopped_controller(m_opaque, [&]() noexcept {
+  const auto status = with_stopped_controller(m_opaque, [&]() noexcept {
     return configure_m_filter(m_opaque, m_filters(m_opaque)[id].value(), id, false);
   });
+  if (status != result::OK) {
+    return status;
+  }
+
+  m_filter_enabled(m_opaque)[id] = false;
+  return result::OK;
 }
 
 expected::expected<bool, result> M_can::is_filter_enabled(uint8_t id) {

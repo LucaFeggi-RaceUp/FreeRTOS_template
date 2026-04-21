@@ -14,10 +14,12 @@
   X(USB, USART1, GPIOA, GPIO_PIN_11, GPIOA, GPIO_PIN_10, GPIO_AF7_USART1)
 
 #define RU_STM32H5XX_M_CAN_MAP(X)                                                       \
-  X(CAN_2, FDCAN1, GPIOD, GPIO_PIN_0, GPIOD, GPIO_PIN_1, GPIO_AF9_FDCAN1)
+  X(CAN_1, FDCAN1, GPIOD, GPIO_PIN_0, GPIOD, GPIO_PIN_1, GPIO_AF9_FDCAN1)                \
+  X(CAN_2, FDCAN2, GPIOB, GPIO_PIN_5, GPIOB, GPIO_PIN_13, GPIO_AF9_FDCAN2)
   
 #define RU_STM32H5XX_BX_CAN_MAP(X)                                                       \
-  X(CAN_2, FDCAN1, GPIOD, GPIO_PIN_0, GPIOD, GPIO_PIN_1, GPIO_AF9_FDCAN1)
+  X(CAN_1, FDCAN1, GPIOD, GPIO_PIN_0, GPIOD, GPIO_PIN_1, GPIO_AF9_FDCAN1)                \
+  X(CAN_2, FDCAN2, GPIOB, GPIO_PIN_5, GPIOB, GPIO_PIN_13, GPIO_AF9_FDCAN2)
 
 #define RU_STM32H5XX_EEPROM_MAP(X)                                                       \
   X(EEPROM_0, 1U, 32U)

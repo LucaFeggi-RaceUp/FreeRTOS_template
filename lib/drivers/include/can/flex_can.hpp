@@ -16,6 +16,7 @@ class Flex_canTx;
 struct Flex_Mask {
   uint32_t id;
   uint32_t mask;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 
 struct Flex_filter {

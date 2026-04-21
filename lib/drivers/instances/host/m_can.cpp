@@ -1,9 +1,24 @@
 #include "can/m_can.hpp"
 
+#include <array>
+#include <cstddef>
+
 #include "can_helpers.hpp"
 #include "utils/common.hpp"
 
 using namespace ru::driver;
+
+namespace {
+constexpr uint8_t k_host_can_filter_slots = 28U;
+constexpr M_canId k_default_m_can_id = M_canId::CAN_1;
+std::array<CanControllerConfig, static_cast<std::size_t>(M_canId::COUNT)>
+    g_m_can_configs{};
+
+CanControllerConfig& host_can_config(const M_canId id) noexcept {
+  const auto index = static_cast<std::size_t>(id);
+  return index < g_m_can_configs.size() ? g_m_can_configs[index] : g_m_can_configs[0];
+}
+}  // namespace
 
 namespace ru::driver {
 expected::expected<CanMessageTs, result> M_canRx::read(M_fifo fifo) noexcept {
@@ -29,6 +44,29 @@ M_can::M_can(const M_canId id) noexcept : m_id(id) {
 result M_can::start() noexcept {
   LOG("M_can driver start");
   return result::OK;
+}
+
+result M_can::configure(const CanControllerConfig& config) noexcept {
+  return configure(k_default_m_can_id, config);
+}
+
+result M_can::configure(const M_canId id, const CanControllerConfig& config) noexcept {
+  if (config.standard_filter_count > k_host_can_filter_slots ||
+      config.extended_filter_count > k_host_can_filter_slots) {
+    return result::UNRECOVERABLE_ERROR;
+  }
+
+  host_can_config(id) = config;
+  LOG("M_can " << toText(id) << " configure");
+  return result::OK;
+}
+
+CanControllerConfig M_can::configuration() noexcept {
+  return configuration(k_default_m_can_id);
+}
+
+CanControllerConfig M_can::configuration(const M_canId id) noexcept {
+  return host_can_config(id);
 }
 
 result M_can::init() noexcept {

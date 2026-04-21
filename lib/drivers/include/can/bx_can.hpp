@@ -17,10 +17,12 @@ enum class Bx_fifo : uint8_t { FIFO0, FIFO1 };
 struct Bx_Mask32 {
   uint32_t id;
   uint32_t mask;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 struct Bx_List32 {
   uint32_t id1;
   uint32_t id2;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 struct Bx_Mask16 {
   uint16_t id1;

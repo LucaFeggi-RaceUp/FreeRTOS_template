@@ -24,6 +24,69 @@ constexpr uint32_t fifo_filter_target(const M_fifo fifo) noexcept {
   return fifo == M_fifo::FIFO1 ? FDCAN_FILTER_TO_RXFIFO1 : FDCAN_FILTER_TO_RXFIFO0;
 }
 
+constexpr uint32_t fdcan_id_type(const CanIdFormat format) noexcept {
+  return format == CanIdFormat::Extended ? FDCAN_EXTENDED_ID : FDCAN_STANDARD_ID;
+}
+
+constexpr uint32_t fdcan_controller_frame_format(const CanFrameFormat format) noexcept {
+  switch (format) {
+    case CanFrameFormat::FdBrs:
+      return FDCAN_FRAME_FD_BRS;
+    case CanFrameFormat::Fd:
+      return FDCAN_FRAME_FD_NO_BRS;
+    default:
+      return FDCAN_FRAME_CLASSIC;
+  }
+}
+
+constexpr uint32_t fdcan_tx_frame_format(const CanFrameFormat format) noexcept {
+  return format == CanFrameFormat::Classic ? FDCAN_CLASSIC_CAN : FDCAN_FD_CAN;
+}
+
+constexpr uint32_t fdcan_bitrate_switch(const CanFrameFormat format) noexcept {
+  return format == CanFrameFormat::FdBrs ? FDCAN_BRS_ON : FDCAN_BRS_OFF;
+}
+
+constexpr CanIdFormat can_id_format_from_header(
+    const FDCAN_RxHeaderTypeDef& header) noexcept {
+  return header.IdType == FDCAN_EXTENDED_ID ? CanIdFormat::Extended
+                                           : CanIdFormat::Standard;
+}
+
+constexpr CanFrameFormat can_frame_format_from_header(
+    const FDCAN_RxHeaderTypeDef& header) noexcept {
+  if (header.FDFormat != FDCAN_FD_CAN) {
+    return CanFrameFormat::Classic;
+  }
+
+  return header.BitRateSwitch == FDCAN_BRS_ON ? CanFrameFormat::FdBrs
+                                              : CanFrameFormat::Fd;
+}
+
+constexpr bool controller_config_is_valid(
+    const CanControllerConfig& controller_config) noexcept {
+  return controller_config.standard_filter_count <= k_std_filter_slots &&
+         controller_config.extended_filter_count <= k_ext_filter_slots;
+}
+
+constexpr bool filter_slot_is_valid(const CanIdFormat format, const uint8_t id,
+                                    const CanControllerConfig& controller_config) noexcept {
+  return format == CanIdFormat::Extended
+             ? id < controller_config.extended_filter_count
+             : id < controller_config.standard_filter_count;
+}
+
+constexpr bool filter_value_is_valid(const CanIdFormat format,
+                                     const uint32_t value) noexcept {
+  return can_id_value_is_valid(format, value);
+}
+
+constexpr bool filter_range_is_valid(const CanIdFormat format, const uint32_t from,
+                                     const uint32_t to) noexcept {
+  return from <= to && filter_value_is_valid(format, from) &&
+         filter_value_is_valid(format, to);
+}
+
 constexpr uint32_t normalize_bx16_value(const uint16_t value) noexcept {
   return value <= 0x7FFU ? value : ((value >> 5U) & 0x7FFU);
 }
@@ -31,9 +94,12 @@ constexpr uint32_t normalize_bx16_value(const uint16_t value) noexcept {
 CanMessageTs make_message_ts(const FDCAN_RxHeaderTypeDef& header,
                             const uint8_t* const payload) noexcept {
   CanMessage message{};
-  message.id = header.Identifier & 0x7FFU;
+  const auto id_format = can_id_format_from_header(header);
+  message.id = id_format == CanIdFormat::Extended
+                   ? CanId::extended_unchecked(header.Identifier)
+                   : CanId::standard_unchecked(header.Identifier);
+  message.frame_format = can_frame_format_from_header(header);
   message.len = fdcan_length_from_dlc(header.DataLength);
-  message.full_word = 0U;
   std::memcpy(message.bytes, payload, message.len);
 
   const auto filter =
@@ -51,6 +117,7 @@ std::array<uint8_t, 2> g_fdcan1_rx_priorities{k_default_irq_priority,
 std::array<bool, 2> g_fdcan1_rx_interrupts{false, false};
 uint8_t g_fdcan1_error_priority{k_default_irq_priority};
 bool g_fdcan1_error_interrupt{false};
+CanControllerConfig g_fdcan1_controller_config{};
 std::optional<M_fifo> g_fdcan1_not_matching{};
 std::array<std::optional<M_filter>, k_std_filter_slots> g_fdcan1_m_filters{};
 std::array<bool, k_std_filter_slots> g_fdcan1_m_filter_enabled{};
@@ -76,27 +143,38 @@ result do_apply_global_filter(const opaque_can& config) noexcept {
 }
 
 bool translate_m_filter(const M_filter& filter, FDCAN_FilterTypeDef& hw_filter) noexcept {
-  hw_filter.IdType = FDCAN_STANDARD_ID;
   hw_filter.FilterConfig = fifo_filter_target(filter.fifo);
 
   return std::visit(
       [&](const auto& config) noexcept -> bool {
         using config_type = std::decay_t<decltype(config)>;
 
+        hw_filter.IdType = fdcan_id_type(config.format);
         if constexpr (std::is_same_v<config_type, M_Mask>) {
+          if (!filter_value_is_valid(config.format, config.id) ||
+              !filter_value_is_valid(config.format, config.mask)) {
+            return false;
+          }
           hw_filter.FilterType = FDCAN_FILTER_MASK;
-          hw_filter.FilterID1 = config.id & 0x7FFU;
-          hw_filter.FilterID2 = config.mask & 0x7FFU;
+          hw_filter.FilterID1 = config.id;
+          hw_filter.FilterID2 = config.mask;
           return true;
         } else if constexpr (std::is_same_v<config_type, M_Dual>) {
+          if (!filter_value_is_valid(config.format, config.id1) ||
+              !filter_value_is_valid(config.format, config.id2)) {
+            return false;
+          }
           hw_filter.FilterType = FDCAN_FILTER_DUAL;
-          hw_filter.FilterID1 = config.id1 & 0x7FFU;
-          hw_filter.FilterID2 = config.id2 & 0x7FFU;
+          hw_filter.FilterID1 = config.id1;
+          hw_filter.FilterID2 = config.id2;
           return true;
         } else if constexpr (std::is_same_v<config_type, M_Range>) {
+          if (!filter_range_is_valid(config.format, config.from, config.to)) {
+            return false;
+          }
           hw_filter.FilterType = FDCAN_FILTER_RANGE;
-          hw_filter.FilterID1 = config.from & 0x7FFU;
-          hw_filter.FilterID2 = config.to & 0x7FFU;
+          hw_filter.FilterID1 = config.from;
+          hw_filter.FilterID2 = config.to;
           return true;
         } else {
           return false;
@@ -106,7 +184,6 @@ bool translate_m_filter(const M_filter& filter, FDCAN_FilterTypeDef& hw_filter) 
 }
 
 bool translate_bx_filter(const Bx_filter& filter, FDCAN_FilterTypeDef& hw_filter) noexcept {
-  hw_filter.IdType = FDCAN_STANDARD_ID;
   hw_filter.FilterConfig = fifo_filter_target(to_m_fifo(filter.fifo));
 
   return std::visit(
@@ -114,27 +191,59 @@ bool translate_bx_filter(const Bx_filter& filter, FDCAN_FilterTypeDef& hw_filter
         using config_type = std::decay_t<decltype(config)>;
 
         if constexpr (std::is_same_v<config_type, Bx_Mask32>) {
+          if (!filter_value_is_valid(config.format, config.id) ||
+              !filter_value_is_valid(config.format, config.mask)) {
+            return false;
+          }
+          hw_filter.IdType = fdcan_id_type(config.format);
           hw_filter.FilterType = FDCAN_FILTER_MASK;
-          hw_filter.FilterID1 = config.id & 0x7FFU;
-          hw_filter.FilterID2 = config.mask & 0x7FFU;
+          hw_filter.FilterID1 = config.id;
+          hw_filter.FilterID2 = config.mask;
           return true;
         } else if constexpr (std::is_same_v<config_type, Bx_List32>) {
+          if (!filter_value_is_valid(config.format, config.id1) ||
+              !filter_value_is_valid(config.format, config.id2)) {
+            return false;
+          }
+          hw_filter.IdType = fdcan_id_type(config.format);
           hw_filter.FilterType = FDCAN_FILTER_DUAL;
-          hw_filter.FilterID1 = config.id1 & 0x7FFU;
-          hw_filter.FilterID2 = config.id2 & 0x7FFU;
+          hw_filter.FilterID1 = config.id1;
+          hw_filter.FilterID2 = config.id2;
           return true;
         } else if constexpr (std::is_same_v<config_type, Bx_Mask16>) {
+          hw_filter.IdType = FDCAN_STANDARD_ID;
           hw_filter.FilterType = FDCAN_FILTER_MASK;
           hw_filter.FilterID1 = normalize_bx16_value(config.id1);
           hw_filter.FilterID2 = normalize_bx16_value(config.mask1);
           return true;
         } else if constexpr (std::is_same_v<config_type, Bx_List16>) {
+          hw_filter.IdType = FDCAN_STANDARD_ID;
           hw_filter.FilterType = FDCAN_FILTER_DUAL;
           hw_filter.FilterID1 = normalize_bx16_value(config.id1);
           hw_filter.FilterID2 = normalize_bx16_value(config.id2);
           return true;
         } else {
           return false;
+        }
+      },
+      filter.config);
+}
+
+CanIdFormat m_filter_format(const M_filter& filter) noexcept {
+  return std::visit(
+      [](const auto& config) noexcept -> CanIdFormat { return config.format; },
+      filter.config);
+}
+
+CanIdFormat bx_filter_format(const Bx_filter& filter) noexcept {
+  return std::visit(
+      [](const auto& config) noexcept -> CanIdFormat {
+        using config_type = std::decay_t<decltype(config)>;
+        if constexpr (std::is_same_v<config_type, Bx_Mask32> ||
+                      std::is_same_v<config_type, Bx_List32>) {
+          return config.format;
+        } else {
+          return CanIdFormat::Standard;
         }
       },
       filter.config);
@@ -174,6 +283,11 @@ uint8_t& error_priority(const opaque_can& config) noexcept {
 bool& error_interrupt(const opaque_can& config) noexcept {
   (void)config;
   return g_fdcan1_error_interrupt;
+}
+
+CanControllerConfig& controller_config(const opaque_can& config) noexcept {
+  (void)config;
+  return g_fdcan1_controller_config;
 }
 
 std::optional<M_fifo>& not_matching(const opaque_can& config) noexcept {
@@ -258,9 +372,29 @@ result refresh_notifications(const opaque_can& config) noexcept {
   return result::OK;
 }
 
+result configure_controller(const opaque_can& config,
+                            const CanControllerConfig& new_config) noexcept {
+  if (!controller_config_is_valid(new_config)) {
+    return result::UNRECOVERABLE_ERROR;
+  }
+  if (initialized(config)) {
+    return result::RECOVERABLE_ERROR;
+  }
+
+  controller_config(config) = new_config;
+  return result::OK;
+}
+
+CanControllerConfig current_controller_config(const opaque_can& config) noexcept {
+  return controller_config(config);
+}
+
 result init_controller(const opaque_can& config) noexcept {
   if (config.m_p_instance == nullptr || config.m_p_port_rx == nullptr ||
       config.m_p_port_tx == nullptr) {
+    return result::UNRECOVERABLE_ERROR;
+  }
+  if (!controller_config_is_valid(controller_config(config))) {
     return result::UNRECOVERABLE_ERROR;
   }
 
@@ -281,9 +415,11 @@ result init_controller(const opaque_can& config) noexcept {
   init_alternate_pin(config.m_p_port_tx, config.m_tx_pin, config.m_alternate);
 
   hw_handle = {};
+  const auto current_config = controller_config(config);
   hw_handle.Instance = config.m_p_instance;
   hw_handle.Init.ClockDivider = FDCAN_CLOCK_DIV1;
-  hw_handle.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+  hw_handle.Init.FrameFormat =
+      fdcan_controller_frame_format(current_config.max_frame_format);
   hw_handle.Init.Mode = FDCAN_MODE_NORMAL;
   hw_handle.Init.AutoRetransmission = ENABLE;
   hw_handle.Init.TransmitPause = DISABLE;
@@ -296,8 +432,8 @@ result init_controller(const opaque_can& config) noexcept {
   hw_handle.Init.DataSyncJumpWidth = 1U;
   hw_handle.Init.DataTimeSeg1 = 1U;
   hw_handle.Init.DataTimeSeg2 = 1U;
-  hw_handle.Init.StdFiltersNbr = static_cast<uint32_t>(k_std_filter_slots);
-  hw_handle.Init.ExtFiltersNbr = 0U;
+  hw_handle.Init.StdFiltersNbr = current_config.standard_filter_count;
+  hw_handle.Init.ExtFiltersNbr = current_config.extended_filter_count;
   hw_handle.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
 
   if (HAL_FDCAN_Init(&hw_handle) != HAL_OK) {
@@ -368,7 +504,7 @@ expected::expected<CanMessageTs, result> read_fifo_message(const opaque_can& con
   }
 
   FDCAN_RxHeaderTypeDef header{};
-  uint8_t payload[8]{};
+  uint8_t payload[k_can_fd_max_payload]{};
   if (HAL_FDCAN_GetRxMessage(&hw_handle, hw_fifo(fifo), &header, payload) != HAL_OK) {
     return expected::unexpected(result::RECOVERABLE_ERROR);
   }
@@ -381,27 +517,31 @@ result write_controller_message(const opaque_can& config,
   if (!initialized(config) || !started(config)) {
     return result::RECOVERABLE_ERROR;
   }
+  if (!message.is_valid() ||
+      !can_frame_format_is_allowed(controller_config(config).max_frame_format,
+                                   message.frame_format)) {
+    return result::UNRECOVERABLE_ERROR;
+  }
 
   FDCAN_TxHeaderTypeDef header{};
-  header.Identifier = message.id & 0x7FFU;
-  header.IdType = FDCAN_STANDARD_ID;
+  header.Identifier = message.id.value;
+  header.IdType = fdcan_id_type(message.id.format);
   header.TxFrameType = FDCAN_DATA_FRAME;
   header.DataLength = fdcan_dlc_from_length(static_cast<uint8_t>(message.len));
   header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
-  header.BitRateSwitch = FDCAN_BRS_OFF;
-  header.FDFormat = FDCAN_CLASSIC_CAN;
+  header.BitRateSwitch = fdcan_bitrate_switch(message.frame_format);
+  header.FDFormat = fdcan_tx_frame_format(message.frame_format);
   header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
   header.MessageMarker = 0U;
 
-  uint8_t payload[8]{};
-  const auto len = static_cast<uint8_t>(message.len > 8U ? 8U : message.len);
-  std::memcpy(payload, message.bytes, len);
+  uint8_t payload[k_can_fd_max_payload]{};
+  std::memcpy(payload, message.bytes, message.len);
   return from_hal_status(HAL_FDCAN_AddMessageToTxFifoQ(&handle(config), &header, payload));
 }
 
 result configure_m_filter(const opaque_can& config, const M_filter& filter, const uint8_t id,
                           const bool enabled) noexcept {
-  if (id >= k_std_filter_slots) {
+  if (!filter_slot_is_valid(m_filter_format(filter), id, controller_config(config))) {
     return result::UNRECOVERABLE_ERROR;
   }
 
@@ -420,7 +560,7 @@ result configure_m_filter(const opaque_can& config, const M_filter& filter, cons
 
 result configure_bx_filter(const opaque_can& config, const Bx_filter& filter, const uint8_t id,
                            const bool enabled) noexcept {
-  if (id >= k_std_filter_slots) {
+  if (!filter_slot_is_valid(bx_filter_format(filter), id, controller_config(config))) {
     return result::UNRECOVERABLE_ERROR;
   }
 

@@ -1,6 +1,6 @@
-[submodule "third_party/FreeRTOS-Kernel"]
-	path = third_party/FreeRTOS-Kernel
-	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "third_party/FreeRTOS-LTS"]
+	path = third_party/FreeRTOS-LTS
+	url = https://github.com/FreeRTOS/FreeRTOS-LTS.git
 [submodule "third_party/expected"]
 	path = third_party/expected
 	url = https://github.com/TartanLlama/expected

@@ -18,14 +18,17 @@ enum class M_fifo : uint8_t { FIFO0, FIFO1 };
 struct M_Mask {
   uint32_t id;
   uint32_t mask;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 struct M_Dual {
   uint32_t id1;
   uint32_t id2;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 struct M_Range {
   uint32_t from;
   uint32_t to;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 
 using M_FilterConfig = std::variant<M_Mask, M_Dual, M_Range>;
@@ -41,6 +44,10 @@ class M_can {
   M_canRx inline into_rx() & noexcept;
 
   M_can(M_canId id) noexcept;
+  static result configure(const CanControllerConfig& config) noexcept;
+  static result configure(M_canId id, const CanControllerConfig& config) noexcept;
+  static CanControllerConfig configuration() noexcept;
+  static CanControllerConfig configuration(M_canId id) noexcept;
   static result start() noexcept;
   result init() noexcept;
   result stop() noexcept;

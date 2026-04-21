@@ -12,6 +12,7 @@
 namespace ru::driver::can_internal {
 inline constexpr uint8_t k_default_irq_priority = 5U;
 inline constexpr std::size_t k_std_filter_slots = 28U;
+inline constexpr std::size_t k_ext_filter_slots = 28U;
 inline constexpr uint32_t k_rx_interrupt_mask_fifo0 = FDCAN_IT_RX_FIFO0_NEW_MESSAGE;
 inline constexpr uint32_t k_rx_interrupt_mask_fifo1 = FDCAN_IT_RX_FIFO1_NEW_MESSAGE;
 inline constexpr uint32_t k_error_interrupt_mask =
@@ -31,6 +32,7 @@ std::array<uint8_t, 2>& rx_priorities(const opaque_can& config) noexcept;
 std::array<bool, 2>& rx_interrupts(const opaque_can& config) noexcept;
 uint8_t& error_priority(const opaque_can& config) noexcept;
 bool& error_interrupt(const opaque_can& config) noexcept;
+CanControllerConfig& controller_config(const opaque_can& config) noexcept;
 std::optional<M_fifo>& not_matching(const opaque_can& config) noexcept;
 std::array<std::optional<M_filter>, k_std_filter_slots>& m_filters(
     const opaque_can& config) noexcept;
@@ -130,6 +132,9 @@ result with_stopped_controller(const opaque_can& config, Fn&& fn) noexcept {
 }
 
 result init_controller(const opaque_can& config) noexcept;
+result configure_controller(const opaque_can& config,
+                            const CanControllerConfig& controller_config) noexcept;
+CanControllerConfig current_controller_config(const opaque_can& config) noexcept;
 result stop_controller(const opaque_can& config) noexcept;
 expected::expected<CanMessageTs, result> read_fifo_message(const opaque_can& config,
                                                           M_fifo fifo) noexcept;

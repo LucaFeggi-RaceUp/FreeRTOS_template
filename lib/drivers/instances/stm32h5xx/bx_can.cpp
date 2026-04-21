@@ -108,10 +108,15 @@ result Bx_can::set_filter(Bx_filter filter, uint8_t id) {
     return result::UNRECOVERABLE_ERROR;
   }
 
+  const auto status = with_stopped_controller(
+      m_opaque, [&]() noexcept { return configure_bx_filter(m_opaque, filter, id, true); });
+  if (status != result::OK) {
+    return status;
+  }
+
   bx_filters(m_opaque)[id] = filter;
   bx_filter_enabled(m_opaque)[id] = true;
-  return with_stopped_controller(
-      m_opaque, [&]() noexcept { return configure_bx_filter(m_opaque, filter, id, true); });
+  return result::OK;
 }
 
 result Bx_can::enable_filter(uint8_t id) {
@@ -122,10 +127,15 @@ result Bx_can::enable_filter(uint8_t id) {
     return result::RECOVERABLE_ERROR;
   }
 
-  bx_filter_enabled(m_opaque)[id] = true;
-  return with_stopped_controller(m_opaque, [&]() noexcept {
+  const auto status = with_stopped_controller(m_opaque, [&]() noexcept {
     return configure_bx_filter(m_opaque, bx_filters(m_opaque)[id].value(), id, true);
   });
+  if (status != result::OK) {
+    return status;
+  }
+
+  bx_filter_enabled(m_opaque)[id] = true;
+  return result::OK;
 }
 
 result Bx_can::disable_filter(uint8_t id) {
@@ -136,10 +146,15 @@ result Bx_can::disable_filter(uint8_t id) {
     return result::RECOVERABLE_ERROR;
   }
 
-  bx_filter_enabled(m_opaque)[id] = false;
-  return with_stopped_controller(m_opaque, [&]() noexcept {
+  const auto status = with_stopped_controller(m_opaque, [&]() noexcept {
     return configure_bx_filter(m_opaque, bx_filters(m_opaque)[id].value(), id, false);
   });
+  if (status != result::OK) {
+    return status;
+  }
+
+  bx_filter_enabled(m_opaque)[id] = false;
+  return result::OK;
 }
 
 expected::expected<bool, result> Bx_can::is_filter_enabled(uint8_t id) {

@@ -39,7 +39,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_definitions($<$<CONFIG:Debug>:DEBUG>)
 
 set(FREERTOS_KERNEL_DIR
-  "${CMAKE_SOURCE_DIR}/third_party/FreeRTOS-Kernel"
+  "${CMAKE_SOURCE_DIR}/third_party/FreeRTOS-LTS/FreeRTOS/FreeRTOS-Kernel"
   CACHE PATH "FreeRTOS kernel directory"
 )
 

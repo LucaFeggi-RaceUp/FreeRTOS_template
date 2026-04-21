@@ -3,6 +3,20 @@
 This repository is a CMake firmware template for FreeRTOS projects that need a
 portable driver layer, a host build, and an STM32H563 firmware build.
 
+The template exists to provide a clean starting point for MCU firmware based on
+FreeRTOS without tying application code to one device from the beginning. It
+keeps the device setup, build rules, and low-level peripheral access behind a
+small project structure so the same application logic can be built for a local
+host environment and for the target MCU.
+
+Its core goal is portability. Application code should use the driver interfaces
+in `lib/drivers/include` when it needs to run on both host and firmware targets.
+Device-specific APIs such as STM32 HAL and CMSIS remain available when needed,
+but using them directly makes that code specific to the corresponding instance.
+The current firmware implementation targets STM32H563 devices; support for new
+MCU families should be added through new `instances` entries and matching driver
+backends.
+
 The template provides:
 
 - Host builds for local development on Windows and Linux.
@@ -14,6 +28,11 @@ The template provides:
 
 Application code lives in `src`. Platform startup, linker scripts, toolchain
 setup, and MCU-specific boot code live in `instances`.
+
+The repository is organized so `instances` owns target selection and device
+startup, `lib/drivers` owns the portable peripheral abstraction layer, and
+`third_party` contains external dependencies such as FreeRTOS, CMSIS, and
+STM32Cube libraries.
 
 ## Repository Layout
 
@@ -40,7 +59,7 @@ Install these tools before building:
 
 The repository uses these submodules:
 
-- `third_party/FreeRTOS-Kernel`
+- `third_party/FreeRTOS-LTS`
 - `third_party/expected`
 - `third_party/STM32/STM32H5/STM32CubeH5`
 - `third_party/STM32/STM32H5/stm32-util-eeprom-emulation`
@@ -54,7 +73,7 @@ is intentionally replaced.
 Clone with submodules:
 
 ```bash
-git clone --recursive <repo-url>
+git clone --recurse-submodules <repo-url>
 ```
 
 For an existing clone, initialize or update the submodules with:
@@ -98,6 +117,11 @@ synchronized when adding or removing application files.
 The default application entry point is `app_start()` in `src/app.cpp`. Platform
 startup initializes the minimal driver set needed by the template app, calls
 `app_start()`, and starts the FreeRTOS scheduler.
+
+Use `app_start()` for application-level peripheral configuration, task creation,
+and initialization that should happen before the scheduler runs. Keep this code
+on the portable driver interfaces where possible so it can continue to build for
+both host and STM32 instances.
 
 When creating a project from the template:
 

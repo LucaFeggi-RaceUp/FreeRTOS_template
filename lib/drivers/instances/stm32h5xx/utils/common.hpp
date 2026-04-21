@@ -113,7 +113,7 @@ inline void enable_fdcan_clock(FDCAN_GlobalTypeDef* const p_instance) noexcept {
 }
 
 constexpr uint32_t fdcan_dlc_from_length(const uint8_t len) noexcept {
-  switch (len > 8U ? 8U : len) {
+  switch (len) {
     case 0U:
       return FDCAN_DLC_BYTES_0;
     case 1U:
@@ -130,8 +130,22 @@ constexpr uint32_t fdcan_dlc_from_length(const uint8_t len) noexcept {
       return FDCAN_DLC_BYTES_6;
     case 7U:
       return FDCAN_DLC_BYTES_7;
-    default:
+    case 8U:
       return FDCAN_DLC_BYTES_8;
+    case 12U:
+      return FDCAN_DLC_BYTES_12;
+    case 16U:
+      return FDCAN_DLC_BYTES_16;
+    case 20U:
+      return FDCAN_DLC_BYTES_20;
+    case 24U:
+      return FDCAN_DLC_BYTES_24;
+    case 32U:
+      return FDCAN_DLC_BYTES_32;
+    case 48U:
+      return FDCAN_DLC_BYTES_48;
+    default:
+      return FDCAN_DLC_BYTES_64;
   }
 }
 
@@ -153,8 +167,22 @@ constexpr uint8_t fdcan_length_from_dlc(const uint32_t dlc) noexcept {
       return 6U;
     case FDCAN_DLC_BYTES_7:
       return 7U;
-    default:
+    case FDCAN_DLC_BYTES_8:
       return 8U;
+    case FDCAN_DLC_BYTES_12:
+      return 12U;
+    case FDCAN_DLC_BYTES_16:
+      return 16U;
+    case FDCAN_DLC_BYTES_20:
+      return 20U;
+    case FDCAN_DLC_BYTES_24:
+      return 24U;
+    case FDCAN_DLC_BYTES_32:
+      return 32U;
+    case FDCAN_DLC_BYTES_48:
+      return 48U;
+    default:
+      return 64U;
   }
 }
 

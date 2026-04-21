@@ -24,14 +24,17 @@ enum class Multi_target : uint8_t {
 struct Multi_Mask {
   uint32_t id;
   uint32_t mask;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 struct Multi_Dual {
   uint32_t id1;
   uint32_t id2;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 struct Multi_Range {
   uint32_t from;
   uint32_t to;
+  CanIdFormat format{CanIdFormat::Standard};
 };
 
 using Multi_FilterConfig =

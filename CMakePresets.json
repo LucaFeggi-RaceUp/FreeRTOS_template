@@ -16,7 +16,7 @@
       "name": "host-debug",
       "displayName": "Host Debug",
       "inherits": "host-base",
-      "binaryDir": ".build-host-debug",
+      "binaryDir": ".build/host-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -25,7 +25,7 @@
       "name": "host-release",
       "displayName": "Host Release",
       "inherits": "host-base",
-      "binaryDir": ".build-host-release",
+      "binaryDir": ".build/host-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
@@ -47,7 +47,7 @@
       "name": "stm32h563-debug",
       "displayName": "STM32H563 Debug",
       "inherits": "stm32h563-base",
-      "binaryDir": ".build-stm32h563-debug",
+      "binaryDir": ".build/stm32h563-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -56,7 +56,7 @@
       "name": "stm32h563-release",
       "displayName": "STM32H563 Release",
       "inherits": "stm32h563-base",
-      "binaryDir": ".build-stm32h563-release",
+      "binaryDir": ".build/stm32h563-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
