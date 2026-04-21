@@ -109,30 +109,79 @@ CanMessageTs make_message_ts(const FDCAN_RxHeaderTypeDef& header,
   return CanMessageTs{message, filter, static_cast<Timestamp>(header.RxTimestamp)};
 }
 
-FDCAN_HandleTypeDef g_fdcan1_handle{};
-bool g_fdcan1_initialized{false};
-bool g_fdcan1_started{false};
-std::array<uint8_t, 2> g_fdcan1_rx_priorities{k_default_irq_priority,
-                                              k_default_irq_priority};
-std::array<bool, 2> g_fdcan1_rx_interrupts{false, false};
-uint8_t g_fdcan1_error_priority{k_default_irq_priority};
-bool g_fdcan1_error_interrupt{false};
-CanControllerConfig g_fdcan1_controller_config{};
-std::optional<M_fifo> g_fdcan1_not_matching{};
-std::array<std::optional<M_filter>, k_std_filter_slots> g_fdcan1_m_filters{};
-std::array<bool, k_std_filter_slots> g_fdcan1_m_filter_enabled{};
-std::array<std::optional<Bx_filter>, k_std_filter_slots> g_fdcan1_bx_filters{};
-std::array<bool, k_std_filter_slots> g_fdcan1_bx_filter_enabled{};
-std::array<void (*)(CanMessageTs), 2> g_fdcan1_rx_callbacks{nullptr, nullptr};
-void (*g_fdcan1_txfull_callback)(){nullptr};
+struct CanControllerState {
+  FDCAN_HandleTypeDef handle{};
+  bool initialized{false};
+  bool started{false};
+  std::array<uint8_t, 2> rx_priorities{k_default_irq_priority,
+                                       k_default_irq_priority};
+  std::array<bool, 2> rx_interrupts{false, false};
+  uint8_t error_priority{k_default_irq_priority};
+  bool error_interrupt{false};
+  CanControllerConfig controller_config{};
+  std::optional<M_fifo> not_matching{};
+  std::array<std::optional<M_filter>, k_std_filter_slots> m_filters{};
+  std::array<bool, k_std_filter_slots> m_filter_enabled{};
+  std::array<std::optional<Bx_filter>, k_std_filter_slots> bx_filters{};
+  std::array<bool, k_std_filter_slots> bx_filter_enabled{};
+  std::array<void (*)(CanMessageTs), 2> rx_callbacks{nullptr, nullptr};
+  void (*txfull_callback)(){nullptr};
+};
+
+CanControllerState g_fdcan1_state{};
+#if defined(FDCAN2)
+CanControllerState g_fdcan2_state{};
+#endif
+CanControllerState g_invalid_state{};
+
+CanControllerState& state(const opaque_can& config) noexcept {
+  if (config.m_p_instance == FDCAN1) {
+    return g_fdcan1_state;
+  }
+#if defined(FDCAN2)
+  if (config.m_p_instance == FDCAN2) {
+    return g_fdcan2_state;
+  }
+#endif
+
+  return g_invalid_state;
+}
+
+constexpr opaque_can instance_config(FDCAN_GlobalTypeDef* const p_instance) noexcept {
+  return opaque_can{p_instance, nullptr, 0U, nullptr, 0U, 0U};
+}
+
+constexpr IRQn_Type fdcan_it0_irq(const opaque_can& config) noexcept {
+#if defined(FDCAN2)
+  if (config.m_p_instance == FDCAN2) {
+    return FDCAN2_IT0_IRQn;
+  }
+#else
+  (void)config;
+#endif
+
+  return FDCAN1_IT0_IRQn;
+}
+
+constexpr IRQn_Type fdcan_it1_irq(const opaque_can& config) noexcept {
+#if defined(FDCAN2)
+  if (config.m_p_instance == FDCAN2) {
+    return FDCAN2_IT1_IRQn;
+  }
+#else
+  (void)config;
+#endif
+
+  return FDCAN1_IT1_IRQn;
+}
 
 void update_irq_priorities(const opaque_can& config) noexcept {
   const auto& fifo_priorities = rx_priorities(config);
   const auto line0_priority = fifo_priorities[0];
   const auto line1_priority = std::min(fifo_priorities[1], error_priority(config));
 
-  HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, line0_priority, 0U);
-  HAL_NVIC_SetPriority(FDCAN1_IT1_IRQn, line1_priority, 0U);
+  HAL_NVIC_SetPriority(fdcan_it0_irq(config), line0_priority, 0U);
+  HAL_NVIC_SetPriority(fdcan_it1_irq(config), line1_priority, 0U);
 }
 
 result do_apply_global_filter(const opaque_can& config) noexcept {
@@ -251,80 +300,65 @@ CanIdFormat bx_filter_format(const Bx_filter& filter) noexcept {
 }  // namespace
 
 FDCAN_HandleTypeDef& handle(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_handle;
+  return state(config).handle;
 }
 
 bool& initialized(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_initialized;
+  return state(config).initialized;
 }
 
 bool& started(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_started;
+  return state(config).started;
 }
 
 std::array<uint8_t, 2>& rx_priorities(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_rx_priorities;
+  return state(config).rx_priorities;
 }
 
 std::array<bool, 2>& rx_interrupts(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_rx_interrupts;
+  return state(config).rx_interrupts;
 }
 
 uint8_t& error_priority(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_error_priority;
+  return state(config).error_priority;
 }
 
 bool& error_interrupt(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_error_interrupt;
+  return state(config).error_interrupt;
 }
 
 CanControllerConfig& controller_config(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_controller_config;
+  return state(config).controller_config;
 }
 
 std::optional<M_fifo>& not_matching(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_not_matching;
+  return state(config).not_matching;
 }
 
 std::array<std::optional<M_filter>, k_std_filter_slots>& m_filters(
     const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_m_filters;
+  return state(config).m_filters;
 }
 
 std::array<bool, k_std_filter_slots>& m_filter_enabled(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_m_filter_enabled;
+  return state(config).m_filter_enabled;
 }
 
 std::array<std::optional<Bx_filter>, k_std_filter_slots>& bx_filters(
     const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_bx_filters;
+  return state(config).bx_filters;
 }
 
 std::array<bool, k_std_filter_slots>& bx_filter_enabled(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_bx_filter_enabled;
+  return state(config).bx_filter_enabled;
 }
 
 std::array<void (*)(CanMessageTs), 2>& rx_callbacks(const opaque_can& config) noexcept {
-  (void)config;
-  return g_fdcan1_rx_callbacks;
+  return state(config).rx_callbacks;
 }
 
 void (*&txfull_callback(const opaque_can& config))() {
-  (void)config;
-  return g_fdcan1_txfull_callback;
+  return state(config).txfull_callback;
 }
 result apply_global_filter(const opaque_can& config) noexcept {
   return do_apply_global_filter(config);
@@ -367,8 +401,8 @@ result refresh_notifications(const opaque_can& config) noexcept {
     }
   }
 
-  HAL_NVIC_EnableIRQ(FDCAN1_IT0_IRQn);
-  HAL_NVIC_EnableIRQ(FDCAN1_IT1_IRQn);
+  HAL_NVIC_EnableIRQ(fdcan_it0_irq(config));
+  HAL_NVIC_EnableIRQ(fdcan_it1_irq(config));
   return result::OK;
 }
 
@@ -462,8 +496,8 @@ result init_controller(const opaque_can& config) noexcept {
   }
 
   update_irq_priorities(config);
-  HAL_NVIC_EnableIRQ(FDCAN1_IT0_IRQn);
-  HAL_NVIC_EnableIRQ(FDCAN1_IT1_IRQn);
+  HAL_NVIC_EnableIRQ(fdcan_it0_irq(config));
+  HAL_NVIC_EnableIRQ(fdcan_it1_irq(config));
 
   if (HAL_FDCAN_Start(&hw_handle) != HAL_OK) {
     return result::RECOVERABLE_ERROR;
@@ -592,44 +626,88 @@ void service_rx_fifo(const opaque_can& config, const M_fifo fifo) noexcept {
     callback(message.value());
   }
 }
+
+void service_rx_fifo_callback(FDCAN_HandleTypeDef* const hfdcan,
+                              const M_fifo fifo) noexcept {
+  if (hfdcan == nullptr) {
+    return;
+  }
+
+  const auto fdcan1_config = instance_config(FDCAN1);
+  if (hfdcan == &handle(fdcan1_config)) {
+    service_rx_fifo(fdcan1_config, fifo);
+    return;
+  }
+
+#if defined(FDCAN2)
+  const auto fdcan2_config = instance_config(FDCAN2);
+  if (hfdcan == &handle(fdcan2_config)) {
+    service_rx_fifo(fdcan2_config, fifo);
+  }
+#endif
+}
+
+void service_tx_callback(FDCAN_HandleTypeDef* const hfdcan) noexcept {
+  if (hfdcan == nullptr) {
+    return;
+  }
+
+  const auto fdcan1_config = instance_config(FDCAN1);
+  if (hfdcan == &handle(fdcan1_config) &&
+      txfull_callback(fdcan1_config) != nullptr) {
+    txfull_callback(fdcan1_config)();
+    return;
+  }
+
+#if defined(FDCAN2)
+  const auto fdcan2_config = instance_config(FDCAN2);
+  if (hfdcan == &handle(fdcan2_config) &&
+      txfull_callback(fdcan2_config) != nullptr) {
+    txfull_callback(fdcan2_config)();
+  }
+#endif
+}
+
+void handle_interrupt(FDCAN_GlobalTypeDef* const p_instance) noexcept {
+  auto& hw_handle = handle(instance_config(p_instance));
+  HAL_FDCAN_IRQHandler(&hw_handle);
+}
 }  // namespace ru::driver::can_internal
 
 extern "C" void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef* hfdcan,
                                           uint32_t rx_fifo0_its) {
   (void)rx_fifo0_its;
-  const auto config = ru::driver::can_internal::make_opaque(ru::driver::M_canId::CAN_2);
-  if (hfdcan == &ru::driver::can_internal::handle(config)) {
-    ru::driver::can_internal::service_rx_fifo(config, ru::driver::M_fifo::FIFO0);
-  }
+  ru::driver::can_internal::service_rx_fifo_callback(hfdcan,
+                                                     ru::driver::M_fifo::FIFO0);
 }
 
 extern "C" void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* hfdcan,
                                           uint32_t rx_fifo1_its) {
   (void)rx_fifo1_its;
-  const auto config = ru::driver::can_internal::make_opaque(ru::driver::M_canId::CAN_2);
-  if (hfdcan == &ru::driver::can_internal::handle(config)) {
-    ru::driver::can_internal::service_rx_fifo(config, ru::driver::M_fifo::FIFO1);
-  }
+  ru::driver::can_internal::service_rx_fifo_callback(hfdcan,
+                                                     ru::driver::M_fifo::FIFO1);
 }
 
 extern "C" void HAL_FDCAN_TxBufferCompleteCallback(FDCAN_HandleTypeDef* hfdcan,
                                                    uint32_t buffer_indexes) {
   (void)buffer_indexes;
-  const auto config = ru::driver::can_internal::make_opaque(ru::driver::M_canId::CAN_2);
-  if (hfdcan == &ru::driver::can_internal::handle(config) &&
-      ru::driver::can_internal::txfull_callback(config) != nullptr) {
-    ru::driver::can_internal::txfull_callback(config)();
-  }
+  ru::driver::can_internal::service_tx_callback(hfdcan);
 }
 
 extern "C" void FDCAN1_IT0_IRQHandler(void) {
-  auto& hw_handle = ru::driver::can_internal::handle(
-      ru::driver::can_internal::make_opaque(ru::driver::M_canId::CAN_2));
-  HAL_FDCAN_IRQHandler(&hw_handle);
+  ru::driver::can_internal::handle_interrupt(FDCAN1);
 }
 
 extern "C" void FDCAN1_IT1_IRQHandler(void) {
-  auto& hw_handle = ru::driver::can_internal::handle(
-      ru::driver::can_internal::make_opaque(ru::driver::M_canId::CAN_2));
-  HAL_FDCAN_IRQHandler(&hw_handle);
+  ru::driver::can_internal::handle_interrupt(FDCAN1);
 }
+
+#if defined(FDCAN2)
+extern "C" void FDCAN2_IT0_IRQHandler(void) {
+  ru::driver::can_internal::handle_interrupt(FDCAN2);
+}
+
+extern "C" void FDCAN2_IT1_IRQHandler(void) {
+  ru::driver::can_internal::handle_interrupt(FDCAN2);
+}
+#endif

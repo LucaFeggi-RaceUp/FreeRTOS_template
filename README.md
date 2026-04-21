@@ -157,6 +157,19 @@ Flashing is not automated by this template. For STM32 targets, use
 STM32CubeProgrammer, OpenOCD, or the debugger integration used by your
 development environment.
 
+## Future Improvements
+
+- Add a typed runtime control path for drivers that need to change behavior
+  after initialization. For example, an ADC driver could accept a configuration
+  or command that switches between single-shot polling and continuous DMA
+  sampling without exposing STM32 HAL details to application code.
+
+  This should be modeled as drivers accepting explicit commands or
+  configuration objects rather than drivers inheriting from a command base
+  class. Commands are requests sent to a driver; the driver remains the owner of
+  its state, validation, stop/reconfigure/start sequence, and backend-specific
+  behavior.
+
 ## Current Limitations
 
 - The host backend is useful for local execution, but it is not a hardware
