@@ -100,10 +100,10 @@ endif()
 
 add_subdirectory(lib/drivers)
 
-add_subdirectory(src)
+add_subdirectory(app)
 
 if(DEFINED FREERTOS_KERNEL_FORCE_INCLUDE)
-  target_compile_options(src PRIVATE
+  target_compile_options(app PRIVATE
     -include
     ${FREERTOS_KERNEL_FORCE_INCLUDE}
   )
@@ -133,7 +133,7 @@ target_link_libraries(firmware_objects PRIVATE
 
 if(NOT FIRMWARE_STANDALONE_NO_FREERTOS)
   target_link_libraries(firmware_objects PRIVATE
-    src
+    app
     freertos_kernel
   )
 endif()
@@ -157,7 +157,7 @@ endif()
 
 if(NOT FIRMWARE_STANDALONE_NO_FREERTOS)
   target_link_libraries(firmware PRIVATE
-    src
+    app
     freertos_kernel
   )
 endif()
@@ -165,3 +165,16 @@ endif()
 target_link_libraries(firmware PRIVATE
   ${FIRMWARE_LINK_LIBRARIES}
 )
+
+if(IS_STM32)
+  add_custom_command(TARGET firmware POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex
+      $<TARGET_FILE:firmware>
+      $<TARGET_FILE_DIR:firmware>/$<TARGET_FILE_BASE_NAME:firmware>.hex
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+      $<TARGET_FILE:firmware>
+      $<TARGET_FILE_DIR:firmware>/$<TARGET_FILE_BASE_NAME:firmware>.bin
+    COMMENT "firmware.hex and firmware.bin generated as well."
+    VERBATIM
+  )
+endif()

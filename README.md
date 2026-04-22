@@ -26,7 +26,7 @@ The template provides:
 - Driver interfaces for GPIO, ADC, PWM, a monotonic clock, serial, CAN, flash,
   EEPROM, and watchdog.
 
-Application code lives in `src`. Platform startup, linker scripts, toolchain
+Application code lives in `app`. Platform startup, linker scripts, toolchain
 setup, and MCU-specific boot code live in `instances`.
 
 The repository is organized so `instances` owns target selection and device
@@ -43,7 +43,7 @@ STM32Cube libraries.
 - `lib/drivers`: portable driver interfaces and backend implementations.
 - `lib/drivers/instances/host`: host driver backend.
 - `lib/drivers/instances/stm32h5xx`: STM32H5 driver backend.
-- `src`: application sources linked into the firmware target.
+- `app`: application sources linked into the firmware target.
 - `third_party`: external dependencies tracked as git submodules.
 
 ## Dependencies
@@ -109,12 +109,12 @@ Available workflows:
 - `stm32h563-debug`
 - `stm32h563-release`
 
-The build compiles the sources listed in `src/CMakeLists.txt`. Keep that file
+The build compiles the sources listed in `app/CMakeLists.txt`. Keep that file
 synchronized when adding or removing application files.
 
 ## Application Code
 
-The default application entry point is `app_start()` in `src/app.cpp`. Platform
+The default application entry point is `app_start()` in `app/app.cpp`. Platform
 startup initializes the minimal driver set needed by the template app, calls
 `app_start()`, and starts the FreeRTOS scheduler.
 
@@ -125,9 +125,9 @@ both host and STM32 instances.
 
 When creating a project from the template:
 
-1. Replace the example logic in `src/app.cpp`.
-2. Add new application source files under `src`.
-3. Register new source files in `src/CMakeLists.txt`.
+1. Replace the example logic in `app/app.cpp`.
+2. Add new application source files under `app`.
+3. Register new source files in `app/CMakeLists.txt`.
 4. Use driver interfaces from `lib/drivers/include` for code that should remain
    portable across host and STM32.
 5. Use HAL or CMSIS directly only in code that is intentionally STM32-specific.
