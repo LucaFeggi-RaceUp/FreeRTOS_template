@@ -36,17 +36,19 @@ STM32Cube libraries.
 
 ## Repository Layout
 
-- `config/tmpl`: default template root configuration, including
-  `FreeRTOSConfig.h` and driver id headers.
-- `config/driver_smoke`: root configuration selected by the board smoke-test
-  presets.
+- `config/tmpl`: placeholder root configuration, including
+  `FreeRTOSConfig.h` and driver id headers. Copy or rename this for the real
+  board configuration used by your firmware.
+- `config/driver_smoke`: concrete root configuration selected by the board
+  smoke-test presets.
 - `instances/host`: host startup and FreeRTOS simulator glue.
 - `instances/stm32/stm32h5xx`: shared STM32H5 family setup.
 - `lib/drivers`: portable driver interfaces and backend implementations.
 - `lib/drivers/instances/host`: host driver backend.
 - `lib/drivers/instances/stm32h5xx`: STM32H5 driver backend.
-- `lib/drivers/instances/stm32h5xx/config/tmpl`: default STM32H5 driver
-  mapping for the template.
+- `lib/drivers/instances/stm32h5xx/config/tmpl`: placeholder STM32H5 driver
+  mapping for the template. Copy or rename this for the real board pin and
+  peripheral mapping.
 - `lib/drivers/instances/stm32h5xx/config/driver_smoke`: STM32H5 driver mapping
   selected by the board smoke-test preset.
 - `app`: application sources linked into the firmware target.
@@ -90,6 +92,85 @@ For an existing clone, initialize or update the submodules with:
 git submodule update --init --recursive
 ```
 
+## Using The Template For A Board
+
+The `tmpl` configuration is only a starting point. For a real firmware project,
+replace it with a configuration named after the board or product you are
+building for. Do not treat `tmpl` as a shared production configuration; board
+configuration belongs to the board.
+
+There are two board-specific configuration layers:
+
+- `CONFIG_DIR`: the root configuration directory. It provides
+  `FreeRTOSConfig.h` and the logical driver id headers under `driver_ids`.
+- `STM32H5XX_DRIVER_CONFIG`: the STM32H5 driver mapping directory under
+  `lib/drivers/instances/stm32h5xx/config`. It maps the logical driver ids to
+  real STM32 ports, pins, peripheral instances, channels, alternate functions,
+  EEPROM layout, and watchdog resources.
+
+The logical ids are the names used by application code. The backend mapping is
+what makes those names real on a specific board. For example, if the application
+uses `GpioId::STATUS_LED`, then `config/<board>/driver_ids/gpio_id.hpp` must
+declare `STATUS_LED`, and
+`lib/drivers/instances/stm32h5xx/config/<board>/mapping.hpp` must map
+`STATUS_LED` to the actual GPIO port, pin, polarity, and initial state for that
+board.
+
+Typical project setup:
+
+1. Choose a board configuration name, for example `my_board`.
+2. Copy `config/tmpl` to `config/my_board`.
+3. Edit `config/my_board/FreeRTOSConfig.h` for the board's FreeRTOS heap,
+   priorities, hooks, and enabled features.
+4. Edit the headers in `config/my_board/driver_ids` so they contain the logical
+   resources your application uses, such as LEDs, ADC inputs, timers, serial
+   ports, CAN buses, EEPROM areas, and watchdogs.
+5. Copy `lib/drivers/instances/stm32h5xx/config/tmpl` to
+   `lib/drivers/instances/stm32h5xx/config/my_board`.
+6. Edit `lib/drivers/instances/stm32h5xx/config/my_board/mapping.hpp` so every
+   logical driver id is mapped to the actual STM32H5 peripheral and pins on the
+   board schematic.
+7. Replace the example application in `app`, or create another application
+   directory and select it with `APP_DIR`.
+8. Add board-specific CMake presets that select the board configuration.
+
+For example, a board preset should point both configuration layers at the board:
+
+```json
+{
+  "name": "my-board-debug",
+  "displayName": "My Board Debug",
+  "inherits": "stm32h563-base",
+  "binaryDir": ".build/my-board-debug",
+  "cacheVariables": {
+    "CONFIG_DIR": "${sourceDir}/config/my_board",
+    "STM32H5XX_DRIVER_CONFIG": "my_board",
+    "CMAKE_BUILD_TYPE": "Debug"
+  }
+}
+```
+
+This is the configure preset entry. Add matching `buildPresets` and
+`workflowPresets` entries following the existing preset pattern if you want to
+build it with `cmake --workflow --preset my-board-debug`.
+
+If the board uses the same STM32H563VIT6x MCU variant as the template presets,
+it can inherit from `stm32h563-base`. If it uses a different STM32 package or
+family, add the matching instance under `instances/stm32` and set `INSTANCE` to
+that instance from the preset. The `DRIVERS_INSTANCE` value selects the driver
+backend family, such as `host` or `stm32h5xx`.
+
+Keep configuration ownership clear:
+
+- Application behavior belongs in `app` or in the directory selected by
+  `APP_DIR`.
+- RTOS and logical resource ids belong in `config/<board>`.
+- STM32 pin and peripheral bindings belong in
+  `lib/drivers/instances/stm32h5xx/config/<board>/mapping.hpp`.
+- Startup, linker, clock, and MCU-package details belong in `instances`.
+- External dependency code under `third_party` should not be edited as board
+  configuration.
+
 ## Building
 
 List the available presets:
@@ -125,11 +206,12 @@ Available workflows:
 - `stm32h563-driver-smoke-debug`
 - `stm32h563-driver-smoke-release`
 
-The default build compiles the sources listed in `app/CMakeLists.txt` and uses
-`config/tmpl` plus the STM32H5 `tmpl` driver mapping. Alternate applications can
-be selected with the `APP_DIR` CMake cache variable. Root configuration is
-selected with `CONFIG_DIR`; STM32H5 driver mapping is selected with
-`STM32H5XX_DRIVER_CONFIG`.
+The default template presets compile the sources listed in `app/CMakeLists.txt`
+and use `config/tmpl` plus the STM32H5 `tmpl` driver mapping. A real board
+should use its own presets that select `config/<board>` with `CONFIG_DIR` and
+`lib/drivers/instances/stm32h5xx/config/<board>` with
+`STM32H5XX_DRIVER_CONFIG`. Alternate applications can be selected with the
+`APP_DIR` CMake cache variable.
 
 Build output is written under `.build/<preset>`. The Ninja backend handles
 incremental rebuilds and uses its native parallel job scheduling by default. STM32
