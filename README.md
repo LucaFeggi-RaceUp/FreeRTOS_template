@@ -39,8 +39,8 @@ STM32Cube libraries.
 - `config/tmpl`: placeholder root configuration, including
   `FreeRTOSConfig.h` and driver id headers. Copy or rename this for the real
   board configuration used by your firmware.
-- `config/driver_smoke`: concrete root configuration selected by the board
-  smoke-test presets.
+- `config/driver_smoke`: concrete root configuration selected by the on-target
+  driver smoke-test presets.
 - `instances/host`: host startup and FreeRTOS simulator glue.
 - `instances/stm32/stm32h5xx`: shared STM32H5 family setup.
 - `lib/drivers`: portable driver interfaces and backend implementations.
@@ -50,9 +50,9 @@ STM32Cube libraries.
   mapping for the template. Copy or rename this for the real board pin and
   peripheral mapping.
 - `lib/drivers/instances/stm32h5xx/config/driver_smoke`: STM32H5 driver mapping
-  selected by the board smoke-test preset.
+  selected by the on-target driver smoke-test preset.
 - `app`: application sources linked into the firmware target.
-- `tests/board/driver_smoke`: selectable board smoke-test application for
+- `tests/on_target/driver_smoke`: selectable on-target smoke-test application for
   FreeRTOS, USB reporting, CAN, ADC, GPIO, and EEPROM bring-up.
 - `third_party`: external dependencies tracked as git submodules.
 
@@ -191,7 +191,7 @@ Build the STM32H563 target:
 cmake --workflow --preset stm32h563-debug
 ```
 
-Build the STM32H563 board driver smoke-test target:
+Build the STM32H563 on-target driver smoke-test target:
 
 ```bash
 cmake --workflow --preset stm32h563-driver-smoke-debug
@@ -242,10 +242,21 @@ Driver ids and `FreeRTOSConfig.h` are selected from the root `CONFIG_DIR`.
 STM32H5 pin and peripheral mapping is selected from
 `lib/drivers/instances/stm32h5xx/config/<STM32H5XX_DRIVER_CONFIG>/mapping.hpp`.
 
-## Board Driver Smoke Test
+## On-Target Driver Smoke Test
 
-The board smoke test is a firmware application that uses the same `app_start()`
-entry point as a normal application. It creates static FreeRTOS tasks for:
+The on-target driver smoke test is a firmware application, not a host/unit test.
+It uses the same `app_start()` entry point as a normal application and is meant
+to be built, flashed, and run on real target hardware.
+
+`on_target` describes where the test runs. The exact chip is selected by the
+CMake preset through `INSTANCE`, and the board wiring is selected by
+`CONFIG_DIR` plus `STM32H5XX_DRIVER_CONFIG`. The provided
+`stm32h563-driver-smoke-*` presets target the STM32H563VIT6x instance and the
+`driver_smoke` board mapping. A different board can reuse this test application
+when its own configuration provides the same logical driver ids and maps them to
+the board's real pins and peripherals.
+
+The smoke-test application creates static FreeRTOS tasks for:
 
 - LED heartbeat on `GpioId::LED_E3`.
 - A FreeRTOS queue/timer self-test.

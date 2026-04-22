@@ -70,7 +70,7 @@
       "cacheVariables": {
         "CONFIG_DIR": "${sourceDir}/config/driver_smoke",
         "STM32H5XX_DRIVER_CONFIG": "driver_smoke",
-        "APP_DIR": "${sourceDir}/tests/board/driver_smoke",
+        "APP_DIR": "${sourceDir}/tests/on_target/driver_smoke",
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
@@ -82,7 +82,7 @@
       "cacheVariables": {
         "CONFIG_DIR": "${sourceDir}/config/driver_smoke",
         "STM32H5XX_DRIVER_CONFIG": "driver_smoke",
-        "APP_DIR": "${sourceDir}/tests/board/driver_smoke",
+        "APP_DIR": "${sourceDir}/tests/on_target/driver_smoke",
         "CMAKE_BUILD_TYPE": "Release"
       }
     }
