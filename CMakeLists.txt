@@ -14,6 +14,14 @@ if(IS_STM32)
   string(SUBSTRING ${INSTANCE} 0 7 FAMILY_PREFIX)
   set(FAMILY_DIR ${FAMILY_PREFIX}xx)
   set(INSTANCE_DIR ${CMAKE_SOURCE_DIR}/instances/stm32/${FAMILY_DIR}/${INSTANCE})
+
+  if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE
+      "${CMAKE_SOURCE_DIR}/instances/stm32/toolchain.cmake"
+      CACHE FILEPATH "Toolchain file used for STM32 cross builds"
+      FORCE
+    )
+  endif()
 else()
   # Host instance.
   set(INSTANCE_DIR ${CMAKE_SOURCE_DIR}/instances/${INSTANCE})
@@ -25,6 +33,9 @@ endif()
 
 if(IS_STM32)
   project(multitarget_freertos LANGUAGES C CXX ASM)
+  set(CMAKE_EXECUTABLE_SUFFIX ".elf")
+  set(CMAKE_EXECUTABLE_SUFFIX_C ".elf")
+  set(CMAKE_EXECUTABLE_SUFFIX_CXX ".elf")
 else()
   project(multitarget_freertos LANGUAGES C CXX)
 endif()
@@ -79,14 +90,69 @@ set(APP_DIR
 
 include(${INSTANCE_DIR}/CMakeLists.txt)
 
+if(DEFINED PLATFORM_TARGETS_FILE AND NOT EXISTS "${PLATFORM_TARGETS_FILE}")
+  message(FATAL_ERROR
+    "PLATFORM_TARGETS_FILE='${PLATFORM_TARGETS_FILE}' does not exist"
+  )
+endif()
+
+if(DEFINED PLATFORM_LINKER_SCRIPT AND NOT EXISTS "${PLATFORM_LINKER_SCRIPT}")
+  message(FATAL_ERROR
+    "PLATFORM_LINKER_SCRIPT='${PLATFORM_LINKER_SCRIPT}' does not exist"
+  )
+endif()
+
+if(DEFINED PLATFORM_COMPILE_OPTIONS
+    OR DEFINED PLATFORM_C_COMPILE_OPTIONS
+    OR DEFINED PLATFORM_CXX_COMPILE_OPTIONS
+    OR DEFINED PLATFORM_ASM_COMPILE_OPTIONS)
+  add_library(platform_options INTERFACE)
+
+  if(DEFINED PLATFORM_COMPILE_OPTIONS)
+    target_compile_options(platform_options INTERFACE
+      ${PLATFORM_COMPILE_OPTIONS}
+    )
+  endif()
+
+  if(DEFINED PLATFORM_C_COMPILE_OPTIONS)
+    target_compile_options(platform_options INTERFACE
+      "$<$<COMPILE_LANGUAGE:C>:${PLATFORM_C_COMPILE_OPTIONS}>"
+    )
+  endif()
+
+  if(DEFINED PLATFORM_CXX_COMPILE_OPTIONS)
+    target_compile_options(platform_options INTERFACE
+      "$<$<COMPILE_LANGUAGE:CXX>:${PLATFORM_CXX_COMPILE_OPTIONS}>"
+    )
+  endif()
+
+  if(DEFINED PLATFORM_ASM_COMPILE_OPTIONS)
+    target_compile_options(platform_options INTERFACE
+      "$<$<COMPILE_LANGUAGE:ASM>:${PLATFORM_ASM_COMPILE_OPTIONS}>"
+    )
+  endif()
+endif()
+
+function(target_use_platform_options target_name)
+  if(TARGET platform_options)
+    target_link_libraries(${target_name} PRIVATE platform_options)
+  endif()
+endfunction()
+
 
 ## Addition of targets -----
 
 add_library(freertos_config INTERFACE)
 target_include_directories(freertos_config INTERFACE
   ${FREERTOS_CONFIG_INCLUDE_DIR}
-  ${CMAKE_SOURCE_DIR}/include
 )
+
+if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/include")
+  target_include_directories(freertos_config INTERFACE
+    ${CMAKE_SOURCE_DIR}/include
+  )
+endif()
+
 if(DEFINED PLATFORM_MAIN_INCDIR)
   target_include_directories(freertos_config INTERFACE
     ${PLATFORM_MAIN_INCDIR}
@@ -96,6 +162,10 @@ endif()
 target_compile_definitions(freertos_config INTERFACE
   ${PLATFORM_DEFS}
 )
+
+if(DEFINED PLATFORM_TARGETS_FILE)
+  include("${PLATFORM_TARGETS_FILE}")
+endif()
 
 add_library(freertos_kernel STATIC
   ${FREERTOS_KERNEL_SOURCES}
@@ -112,6 +182,8 @@ target_link_libraries(freertos_kernel PUBLIC
   freertos_config
 )
 
+target_use_platform_options(freertos_kernel)
+
 if(DEFINED FREERTOS_KERNEL_FORCE_INCLUDE)
   target_compile_options(freertos_kernel PRIVATE
     -include
@@ -120,6 +192,7 @@ if(DEFINED FREERTOS_KERNEL_FORCE_INCLUDE)
 endif()
 
 add_subdirectory(lib/drivers)
+target_use_platform_options(drivers)
 
 if(NOT EXISTS "${APP_DIR}/CMakeLists.txt")
   message(FATAL_ERROR
@@ -128,6 +201,7 @@ if(NOT EXISTS "${APP_DIR}/CMakeLists.txt")
 endif()
 
 add_subdirectory("${APP_DIR}" "${CMAKE_BINARY_DIR}/app")
+target_use_platform_options(app)
 
 if(DEFINED FREERTOS_KERNEL_FORCE_INCLUDE)
   target_compile_options(app PRIVATE
@@ -157,6 +231,8 @@ endif()
 target_link_libraries(firmware_objects PRIVATE
   ${FIRMWARE_LINK_LIBRARIES}
 )
+
+target_use_platform_options(firmware_objects)
 
 if(NOT FIRMWARE_STANDALONE_NO_FREERTOS)
   target_link_libraries(firmware_objects PRIVATE
@@ -193,15 +269,47 @@ target_link_libraries(firmware PRIVATE
   ${FIRMWARE_LINK_LIBRARIES}
 )
 
+target_use_platform_options(firmware)
+
+if(DEFINED PLATFORM_LINK_OPTIONS)
+  target_link_options(firmware PRIVATE
+    ${PLATFORM_LINK_OPTIONS}
+  )
+endif()
+
+if(DEFINED PLATFORM_LINKER_SCRIPT)
+  target_link_options(firmware PRIVATE
+    "-T${PLATFORM_LINKER_SCRIPT}"
+    "-Wl,-Map=${CMAKE_BINARY_DIR}/firmware.map"
+  )
+  set_property(TARGET firmware APPEND PROPERTY
+    LINK_DEPENDS "${PLATFORM_LINKER_SCRIPT}"
+  )
+endif()
+
 if(IS_STM32)
+  set(_firmware_hex "${CMAKE_BINARY_DIR}/firmware.hex")
+  set(_firmware_bin "${CMAKE_BINARY_DIR}/firmware.bin")
+
   add_custom_command(TARGET firmware POST_BUILD
+    BYPRODUCTS
+      "${_firmware_hex}"
+      "${_firmware_bin}"
     COMMAND ${CMAKE_OBJCOPY} -O ihex
       $<TARGET_FILE:firmware>
-      $<TARGET_FILE_DIR:firmware>/$<TARGET_FILE_BASE_NAME:firmware>.hex
+      "${_firmware_hex}"
     COMMAND ${CMAKE_OBJCOPY} -O binary
       $<TARGET_FILE:firmware>
-      $<TARGET_FILE_DIR:firmware>/$<TARGET_FILE_BASE_NAME:firmware>.bin
+      "${_firmware_bin}"
     COMMENT "firmware.hex and firmware.bin generated as well."
     VERBATIM
   )
+
+  if(CMAKE_SIZE)
+    add_custom_command(TARGET firmware POST_BUILD
+      COMMAND ${CMAKE_SIZE} $<TARGET_FILE:firmware>
+      COMMENT "firmware.elf size"
+      VERBATIM
+    )
+  endif()
 endif()

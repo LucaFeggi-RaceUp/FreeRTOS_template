@@ -119,17 +119,22 @@ cmake --workflow --preset stm32h563-driver-smoke-debug
 Available workflows:
 
 - `host-debug`
-- `host-driver-smoke-debug`
 - `host-release`
 - `stm32h563-debug`
-- `stm32h563-driver-smoke-debug`
 - `stm32h563-release`
+- `stm32h563-driver-smoke-debug`
+- `stm32h563-driver-smoke-release`
 
 The default build compiles the sources listed in `app/CMakeLists.txt` and uses
 `config/tmpl` plus the STM32H5 `tmpl` driver mapping. Alternate applications can
 be selected with the `APP_DIR` CMake cache variable. Root configuration is
 selected with `CONFIG_DIR`; STM32H5 driver mapping is selected with
 `STM32H5XX_DRIVER_CONFIG`.
+
+Build output is written under `.build/<preset>`. The Ninja backend handles
+incremental rebuilds and uses its native parallel job scheduling by default. STM32
+firmware builds produce `firmware.elf`, `firmware.hex`, `firmware.bin`, and
+`firmware.map`; the post-link step also prints the ELF size.
 
 ## Application Code
 

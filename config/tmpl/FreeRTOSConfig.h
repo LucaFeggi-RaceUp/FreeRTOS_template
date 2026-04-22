@@ -29,7 +29,10 @@ extern void vAssertCalled(const char *const pcFileName, unsigned long ulLine);
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #endif
 #define configIDLE_SHOULD_YIELD 1
-#define configMAX_PRIORITIES 8
+#ifndef FREERTOS_MAX_PRIORITIES
+#define FREERTOS_MAX_PRIORITIES 8
+#endif
+#define configMAX_PRIORITIES FREERTOS_MAX_PRIORITIES
 #define configUSE_TICKLESS_IDLE 0
 #define configUSE_TIME_SLICING 1
 #define configUSE_CO_ROUTINES 0

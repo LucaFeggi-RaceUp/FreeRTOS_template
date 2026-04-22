@@ -6,8 +6,14 @@ set(STM32H5XX_DRIVER_PLATFORM_DIR
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx
 )
 
-set(MCPU
-  cortex-m33
+set(MCPU cortex-m33 CACHE STRING
+  "Arm CPU passed to the STM32 compiler and linker"
+)
+set(MFPU fpv5-sp-d16 CACHE STRING
+  "Arm FPU passed to the STM32 compiler and linker"
+)
+set(MFLOAT_ABI hard CACHE STRING
+  "Arm floating point ABI passed to the STM32 compiler and linker"
 )
 
 set(FREERTOS_PORT_DIR
@@ -99,7 +105,9 @@ list(APPEND PLATFORM_DEFS
   USE_HAL_DRIVER
   FREERTOS_CPU_CLOCK_HZ=250000000
   FREERTOS_TICK_RATE_HZ=1000
+  STM32HAL_available
   configUSE_TICK_HOOK=1    # DISABLE if not interested in using HAL tick functions
+  configUSE_SYSTICK_HOOK=1
   # ARM CM33 port requirements
   configENABLE_FPU=1
   configENABLE_MPU=0
@@ -142,23 +150,48 @@ set(FREERTOS_KERNEL_FORCE_INCLUDE
   freertos_stm32_config.h
 )
 
-set(DRIVER_SOURCES
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/common.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/adc.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/can.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/flash_memory.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/gpio.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/i2c.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/pwm.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/serial.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/spi.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/timer.cpp
-)
-
 set(LINKER_SCRIPT_FOLDER
   ${CMAKE_CURRENT_LIST_DIR}/linker/
 )
 
+set(PLATFORM_LINKER_SCRIPT
+  ${LINKER_SCRIPT_FOLDER}${STM32_DEVICE}_FLASH.ld
+)
+
 set(STARTUP_SCRIPT
   ${STM32CubeH5_STARTUP_DIR}/startup_${STM32_device}.s
+)
+
+set(PLATFORM_TARGETS_FILE
+  ${CMAKE_SOURCE_DIR}/instances/stm32/CMakeLists.txt
+)
+
+set(PLATFORM_COMPILE_OPTIONS
+  -mcpu=${MCPU}
+  -mthumb
+  -mfpu=${MFPU}
+  -mfloat-abi=${MFLOAT_ABI}
+)
+
+set(PLATFORM_C_COMPILE_OPTIONS
+  -ffunction-sections
+  -fdata-sections
+)
+
+set(PLATFORM_CXX_COMPILE_OPTIONS
+  ${PLATFORM_C_COMPILE_OPTIONS}
+)
+
+set(PLATFORM_ASM_COMPILE_OPTIONS
+  -x
+  assembler-with-cpp
+)
+
+set(PLATFORM_LINK_OPTIONS
+  -mcpu=${MCPU}
+  -mthumb
+  -mfpu=${MFPU}
+  -mfloat-abi=${MFLOAT_ABI}
+  -Wl,--gc-sections
+  -Wl,--print-memory-usage
 )

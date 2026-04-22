@@ -17,6 +17,3 @@ set(STM32_device
 )
 
 include(${CMAKE_SOURCE_DIR}/instances/stm32/stm32h5xx/CMakeLists.txt)
-include(${CMAKE_SOURCE_DIR}/instances/stm32/CMakeLists.txt)
-
-include(${CMAKE_SOURCE_DIR}/instances/stm32/toolchain.cmake)

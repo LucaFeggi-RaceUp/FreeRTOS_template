@@ -189,8 +189,4 @@ endif()
 
 list(APPEND DRIVERS_INSTANCE_COMPILE_OPTIONS
   ${_stm32h5xx_system_include_flags}
-  -mcpu=cortex-m33
-  -mthumb
-  -mfpu=fpv5-sp-d16
-  -mfloat-abi=hard
 )

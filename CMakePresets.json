@@ -91,7 +91,6 @@
     {
       "name": "host-debug",
       "configurePreset": "host-debug",
-      "jobs": 8,
       "targets": [
         "firmware"
       ]
@@ -99,7 +98,6 @@
     {
       "name": "host-release",
       "configurePreset": "host-release",
-      "jobs": 8,
       "targets": [
         "firmware"
       ]
@@ -107,7 +105,6 @@
     {
       "name": "stm32h563-debug",
       "configurePreset": "stm32h563-debug",
-      "jobs": 8,
       "targets": [
         "firmware"
       ]
@@ -115,7 +112,6 @@
     {
       "name": "stm32h563-release",
       "configurePreset": "stm32h563-release",
-      "jobs": 8,
       "targets": [
         "firmware"
       ]
@@ -123,7 +119,6 @@
     {
       "name": "stm32h563-driver-smoke-debug",
       "configurePreset": "stm32h563-driver-smoke-debug",
-      "jobs": 8,
       "targets": [
         "firmware"
       ]
@@ -131,7 +126,6 @@
     {
       "name": "stm32h563-driver-smoke-release",
       "configurePreset": "stm32h563-driver-smoke-release",
-      "jobs": 8,
       "targets": [
         "firmware"
       ]

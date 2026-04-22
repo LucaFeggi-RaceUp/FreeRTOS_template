@@ -27,6 +27,12 @@ target_compile_definitions(cmsis_device PUBLIC
   ${PLATFORM_DEFS}
 )
 
+if(TARGET platform_options)
+  target_link_libraries(cmsis_device PRIVATE
+    platform_options
+  )
+endif()
+
 # Create HAL library
 add_library(device_hal STATIC)
 
@@ -47,6 +53,11 @@ target_link_libraries(device_hal PUBLIC
   freertos_config
 )
 
+if(TARGET platform_options)
+  target_link_libraries(device_hal PRIVATE
+    platform_options
+  )
+endif()
 
 # Define additional sources and libraries for firmware
 # Preserve any sources already collected by family CMakeLists (e.g., family-specific files)
@@ -60,10 +71,4 @@ set(FIRMWARE_LINK_LIBRARIES
   m
   nosys
   device_hal
-)
-
-set(PLATFORM_DEFS
-  ${PLATFORM_DEFS}
-  configUSE_SYSTICK_HOOK=1
-  STM32HAL_available
 )
