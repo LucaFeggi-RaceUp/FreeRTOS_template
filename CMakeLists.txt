@@ -43,10 +43,25 @@ set(FREERTOS_KERNEL_DIR
   CACHE PATH "FreeRTOS kernel directory"
 )
 
-set(DRIVER_IDS_INCLUDE_DIR
-  "${CMAKE_SOURCE_DIR}/include/driver_ids"
-  CACHE PATH "Directory containing the public driver id headers"
+set(CONFIG_DIR
+  "${CMAKE_SOURCE_DIR}/config/tmpl"
+  CACHE PATH "Selected root configuration directory"
 )
+
+set(DRIVER_IDS_INCLUDE_DIR "${CONFIG_DIR}/driver_ids")
+set(FREERTOS_CONFIG_INCLUDE_DIR "${CONFIG_DIR}")
+
+if(NOT EXISTS "${FREERTOS_CONFIG_INCLUDE_DIR}/FreeRTOSConfig.h")
+  message(FATAL_ERROR
+    "CONFIG_DIR='${CONFIG_DIR}' does not contain FreeRTOSConfig.h"
+  )
+endif()
+
+if(NOT IS_DIRECTORY "${DRIVER_IDS_INCLUDE_DIR}")
+  message(FATAL_ERROR
+    "CONFIG_DIR='${CONFIG_DIR}' does not contain a driver_ids directory"
+  )
+endif()
 
 if(NOT DEFINED DRIVERS_INSTANCE)
   set(DRIVERS_INSTANCE "${INSTANCE}")
@@ -57,6 +72,11 @@ set(DRIVERS_INSTANCE
   CACHE STRING "Driver backend instance used by lib/drivers"
 )
 
+set(APP_DIR
+  "${CMAKE_SOURCE_DIR}/app"
+  CACHE PATH "Directory containing the application CMakeLists.txt"
+)
+
 include(${INSTANCE_DIR}/CMakeLists.txt)
 
 
@@ -64,6 +84,7 @@ include(${INSTANCE_DIR}/CMakeLists.txt)
 
 add_library(freertos_config INTERFACE)
 target_include_directories(freertos_config INTERFACE
+  ${FREERTOS_CONFIG_INCLUDE_DIR}
   ${CMAKE_SOURCE_DIR}/include
 )
 if(DEFINED PLATFORM_MAIN_INCDIR)
@@ -100,7 +121,13 @@ endif()
 
 add_subdirectory(lib/drivers)
 
-add_subdirectory(app)
+if(NOT EXISTS "${APP_DIR}/CMakeLists.txt")
+  message(FATAL_ERROR
+    "APP_DIR='${APP_DIR}' does not contain a CMakeLists.txt"
+  )
+endif()
+
+add_subdirectory("${APP_DIR}" "${CMAKE_BINARY_DIR}/app")
 
 if(DEFINED FREERTOS_KERNEL_FORCE_INCLUDE)
   target_compile_options(app PRIVATE

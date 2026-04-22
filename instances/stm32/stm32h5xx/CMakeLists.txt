@@ -2,6 +2,10 @@
 
 message(STATUS "Configuring STM32H5xx family")
 
+set(STM32H5XX_DRIVER_PLATFORM_DIR
+  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx
+)
+
 set(MCPU
   cortex-m33
 )
@@ -53,7 +57,7 @@ set(CMSIS_GENERIC_INCLUDE_DIRS
 )
 
 set(CMSIS_DEVICE_SOURCES
-  ${CMAKE_CURRENT_LIST_DIR}/Src/system_stm32h5xx.c
+  ${STM32H5XX_DRIVER_PLATFORM_DIR}/system_stm32h5xx.c
 )
 
 # STM32H5xx HAL
@@ -62,6 +66,7 @@ set(HAL_DEVICE_INCLUDE_DIRS
   ${CMSIS_DEVICE_INCLUDE_DIRS}
   ${CMSIS_GENERIC_INCLUDE_DIRS}
   ${CMAKE_CURRENT_LIST_DIR}/Inc
+  ${STM32H5XX_DRIVER_PLATFORM_DIR}
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/config
 )
 
@@ -112,8 +117,8 @@ set(INSTANCE_MAIN
 )
 
 set(PLATFORM_MAIN
-  ${CMAKE_CURRENT_LIST_DIR}/Src/stm32h5xx_hal_msp.c
-  ${CMAKE_CURRENT_LIST_DIR}/Src/stm32h5xx_it.c
+  ${STM32H5XX_DRIVER_PLATFORM_DIR}/stm32h5xx_hal_msp.c
+  ${STM32H5XX_DRIVER_PLATFORM_DIR}/stm32h5xx_it.c
 )
 
 if(NOT FIRMWARE_STANDALONE_NO_FREERTOS)
@@ -130,6 +135,7 @@ endif()
 
 set(PLATFORM_MAIN_INCDIR
   ${CMAKE_CURRENT_LIST_DIR}/Inc
+  ${STM32H5XX_DRIVER_PLATFORM_DIR}
 )
 
 set(FREERTOS_KERNEL_FORCE_INCLUDE
@@ -139,7 +145,6 @@ set(FREERTOS_KERNEL_FORCE_INCLUDE
 set(DRIVER_SOURCES
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/common.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/adc.cpp
-  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/clock.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/can.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/flash_memory.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/gpio.cpp
@@ -147,6 +152,7 @@ set(DRIVER_SOURCES
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/pwm.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/serial.cpp
   ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/spi.cpp
+  ${CMAKE_SOURCE_DIR}/lib/drivers/instances/stm32h5xx/timer.cpp
 )
 
 set(LINKER_SCRIPT_FOLDER

@@ -5,6 +5,7 @@ void HAL_MspInit(void)
 
 }
 
+#ifdef HAL_PCD_MODULE_ENABLED
 void HAL_PCD_MspInit(PCD_HandleTypeDef* hpcd)
 {
   RCC_PeriphCLKInitTypeDef periph_clk_init = {0};
@@ -39,3 +40,4 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef* hpcd)
   __HAL_RCC_USB_CLK_DISABLE();
   HAL_NVIC_DisableIRQ(USB_DRD_FS_IRQn);
 }
+#endif

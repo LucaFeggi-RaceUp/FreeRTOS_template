@@ -18,6 +18,21 @@ set(STM32H5_DEVICE "${_stm32h5_default_device}" CACHE STRING
   "STM32H5 device macro used to compile the stm32h5xx drivers instance"
 )
 
+set(STM32H5XX_DRIVER_CONFIG "tmpl" CACHE STRING
+  "STM32H5xx driver mapping configuration"
+)
+
+set(_stm32h5xx_driver_config_dir
+  "${CMAKE_CURRENT_LIST_DIR}/config/${STM32H5XX_DRIVER_CONFIG}"
+)
+
+if(NOT EXISTS "${_stm32h5xx_driver_config_dir}/mapping.hpp")
+  message(FATAL_ERROR
+    "STM32H5XX_DRIVER_CONFIG='${STM32H5XX_DRIVER_CONFIG}' does not provide "
+    "${_stm32h5xx_driver_config_dir}/mapping.hpp"
+  )
+endif()
+
 set(_stm32h5_hal_sources
   "${STM32CubeH5_HAL_SOURCE_DIR}/stm32h5xx_hal_adc.c"
   "${STM32CubeH5_HAL_SOURCE_DIR}/stm32h5xx_hal_adc_ex.c"
@@ -97,11 +112,15 @@ list(APPEND DRIVERS_INSTANCE_SOURCES
   ${_stm32h5_usbx_dcd_sources}
 )
 
-list(APPEND DRIVERS_INSTANCE_PRIVATE_INCLUDE_DIRS
+list(APPEND DRIVERS_INSTANCE_PUBLIC_INCLUDE_DIRS
+  "${CMAKE_CURRENT_LIST_DIR}/config"
   "${STM32CubeH5_HAL_INCLUDE_DIR}"
   "${STM32CubeH5_CMSIS_INCLUDE_DIR}"
   "${STM32CubeH5_CMSIS_DEVICE_INCLUDE_DIR}"
-  "${CMAKE_CURRENT_LIST_DIR}/config"
+)
+
+list(APPEND DRIVERS_INSTANCE_PRIVATE_INCLUDE_DIRS
+  "${_stm32h5xx_driver_config_dir}"
   "${_stm32h5_eeprom_emul_root}/core"
   "${_stm32h5_eeprom_emul_root}/core/algo"
   "${_stm32h5_eeprom_emul_root}/interface_flash"

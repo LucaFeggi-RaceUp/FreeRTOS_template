@@ -23,7 +23,7 @@ The template provides:
 - STM32H563 firmware builds.
 - FreeRTOS kernel integration.
 - STM32CubeH5 HAL and CMSIS integration.
-- Driver interfaces for GPIO, ADC, PWM, a monotonic clock, serial, CAN, flash,
+- Driver interfaces for GPIO, ADC, PWM, hardware timers, serial, CAN, flash,
   EEPROM, and watchdog.
 
 Application code lives in `app`. Platform startup, linker scripts, toolchain
@@ -36,14 +36,22 @@ STM32Cube libraries.
 
 ## Repository Layout
 
-- `include`: shared configuration headers, including `FreeRTOSConfig.h` and
-  driver id headers.
+- `config/tmpl`: default template root configuration, including
+  `FreeRTOSConfig.h` and driver id headers.
+- `config/driver_smoke`: root configuration selected by the board smoke-test
+  presets.
 - `instances/host`: host startup and FreeRTOS simulator glue.
 - `instances/stm32/stm32h5xx`: shared STM32H5 family setup.
 - `lib/drivers`: portable driver interfaces and backend implementations.
 - `lib/drivers/instances/host`: host driver backend.
 - `lib/drivers/instances/stm32h5xx`: STM32H5 driver backend.
+- `lib/drivers/instances/stm32h5xx/config/tmpl`: default STM32H5 driver
+  mapping for the template.
+- `lib/drivers/instances/stm32h5xx/config/driver_smoke`: STM32H5 driver mapping
+  selected by the board smoke-test preset.
 - `app`: application sources linked into the firmware target.
+- `tests/board/driver_smoke`: selectable board smoke-test application for
+  FreeRTOS, USB reporting, CAN, ADC, GPIO, and EEPROM bring-up.
 - `third_party`: external dependencies tracked as git submodules.
 
 ## Dependencies
@@ -102,15 +110,26 @@ Build the STM32H563 target:
 cmake --workflow --preset stm32h563-debug
 ```
 
+Build the STM32H563 board driver smoke-test target:
+
+```bash
+cmake --workflow --preset stm32h563-driver-smoke-debug
+```
+
 Available workflows:
 
 - `host-debug`
+- `host-driver-smoke-debug`
 - `host-release`
 - `stm32h563-debug`
+- `stm32h563-driver-smoke-debug`
 - `stm32h563-release`
 
-The build compiles the sources listed in `app/CMakeLists.txt`. Keep that file
-synchronized when adding or removing application files.
+The default build compiles the sources listed in `app/CMakeLists.txt` and uses
+`config/tmpl` plus the STM32H5 `tmpl` driver mapping. Alternate applications can
+be selected with the `APP_DIR` CMake cache variable. Root configuration is
+selected with `CONFIG_DIR`; STM32H5 driver mapping is selected with
+`STM32H5XX_DRIVER_CONFIG`.
 
 ## Application Code
 
@@ -132,8 +151,34 @@ When creating a project from the template:
    portable across host and STM32.
 5. Use HAL or CMSIS directly only in code that is intentionally STM32-specific.
 
-Driver ids are configured in `include/driver_ids`. STM32H5 pin and peripheral
-mapping is configured in `lib/drivers/instances/stm32h5xx/mapping.hpp`.
+Driver ids and `FreeRTOSConfig.h` are selected from the root `CONFIG_DIR`.
+STM32H5 pin and peripheral mapping is selected from
+`lib/drivers/instances/stm32h5xx/config/<STM32H5XX_DRIVER_CONFIG>/mapping.hpp`.
+
+## Board Driver Smoke Test
+
+The board smoke test is a firmware application that uses the same `app_start()`
+entry point as a normal application. It creates static FreeRTOS tasks for:
+
+- LED heartbeat on `GpioId::LED_E3`.
+- A FreeRTOS queue/timer self-test.
+- ADC sampling from `AdcId::POT_0` every 100 ms.
+- USB CDC text reporting.
+- Classic 11-bit CAN status frames on `M_canId::CAN_1` and `M_canId::CAN_2`.
+- EEPROM persistence validation through a boot counter in `EepromId::EEPROM_0`.
+
+The current default ADC smoke mapping is `POT_0 -> ADC1/PA0/ADC_CHANNEL_0`.
+Change the `POT_0` entry in
+`lib/drivers/instances/stm32h5xx/config/driver_smoke/mapping.hpp` to the real
+potentiometer pin before using the ADC test on your board.
+
+CAN smoke-test frame IDs:
+
+- `0x100`: heartbeat and FreeRTOS counters.
+- `0x111`: CAN1 receive echo.
+- `0x121`: CAN2 receive echo.
+- `0x130`: ADC sample report.
+- `0x140`: EEPROM boot-counter report.
 
 DBC files are not part of this template. Add DBC generation and generated CAN
 sources in the firmware project that is created from the template.
@@ -143,8 +188,8 @@ sources in the firmware project that is created from the template.
 The STM32 target is selected through the `INSTANCE` CMake cache variable. The
 provided presets set this automatically to `stm32h563vit6x`.
 
-Clock and HAL initialization are owned by the STM32H5 common driver startup.
-The default STM32 `main.cpp` stays small: it starts the common, clock, and
+System clock and HAL initialization are owned by the STM32H5 common driver startup.
+The default STM32 `main.cpp` stays small: it starts the common, timer, and
 serial drivers, calls `app_start()`, and starts the scheduler.
 
 USB CDC descriptors use neutral template defaults. Override

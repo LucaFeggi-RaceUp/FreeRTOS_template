@@ -55,7 +55,9 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+#ifdef HAL_PCD_MODULE_ENABLED
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
+#endif
 
 /* USER CODE BEGIN EV */
 
@@ -205,10 +207,12 @@ void SysTick_Handler(void)
 /* please refer to the startup file (startup_stm32h5xx.s).                    */
 /******************************************************************************/
 
+#ifdef HAL_PCD_MODULE_ENABLED
 void USB_DRD_FS_IRQHandler(void)
 {
   HAL_PCD_IRQHandler(&hpcd_USB_DRD_FS);
 }
+#endif
 
 /* USER CODE BEGIN 1 */
 
