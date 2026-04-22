@@ -170,6 +170,10 @@ development environment.
   its state, validation, stop/reconfigure/start sequence, and backend-specific
   behavior.
 
+- Include only the strictly necessary submodules; avoid importing entire upstream projects such as
+  FreeRTOS-LTS or STM32CubeH5.
+
+
 ## Current Limitations
 
 - The host backend is useful for local execution, but it is not a hardware
