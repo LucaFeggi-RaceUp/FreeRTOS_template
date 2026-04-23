@@ -40,11 +40,11 @@ void report_task(void* arg) {
       last_status = now;
       char line[128]{};
       std::snprintf(line, sizeof(line),
-                    "status errors=0x%08lx q=%lu timer=%lu eeprom_boot=%lu\r\n",
+                    "status errors=0x%08lx q=%lu timer=%lu nv_boot=%lu\r\n",
                     static_cast<unsigned long>(error_bits(context)),
                     static_cast<unsigned long>(context.freertos_queue_counter),
                     static_cast<unsigned long>(context.freertos_timer_counter),
-                    static_cast<unsigned long>(context.eeprom_summary.boot_counter));
+                    static_cast<unsigned long>(context.nv_memory_summary.boot_counter));
       usb_line(context, line);
       can_report_heartbeat(context);
     }

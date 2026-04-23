@@ -1,4 +1,4 @@
-#include "opaque_eeprom.hpp"
+#include "opaque_nv_memory_eeprom.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -106,7 +106,7 @@ result write_word(const uint16_t virtual_address, const uint16_t word) noexcept 
 }
 }  // namespace
 
-result opaque_eeprom::init() noexcept {
+result opaque_nv_memory_eeprom::init() noexcept {
   if (!config_valid(m_base_virtual_address, m_capacity)) {
     return result::UNRECOVERABLE_ERROR;
   }
@@ -114,31 +114,45 @@ result opaque_eeprom::init() noexcept {
   return ensure_initialized();
 }
 
-result opaque_eeprom::stop() noexcept {
+result opaque_nv_memory_eeprom::stop() noexcept {
   return result::OK;
 }
 
-uint32_t opaque_eeprom::capacity() const noexcept {
+uint32_t opaque_nv_memory_eeprom::capacity() const noexcept {
   return m_capacity;
 }
 
-result opaque_eeprom::clear() noexcept {
+result opaque_nv_memory_eeprom::clear() noexcept {
   if (!config_valid(m_base_virtual_address, m_capacity)) {
     return result::UNRECOVERABLE_ERROR;
   }
 
-  const auto format_status = EE_Format(EE_FORCED_ERASE);
-  if (format_status != EE_OK) {
-    g_eeprom_initialized = false;
-    return result::RECOVERABLE_ERROR;
+  const auto words = word_count_for_capacity(m_capacity);
+  for (uint16_t word_index = 0U; word_index < words; ++word_index) {
+    const auto virtual_address =
+        static_cast<uint16_t>(m_base_virtual_address + word_index);
+
+    uint16_t word{k_erased_word};
+    auto status = read_word(virtual_address, word);
+    if (status != result::OK) {
+      return status;
+    }
+
+    if (word == k_erased_word) {
+      continue;
+    }
+
+    status = write_word(virtual_address, k_erased_word);
+    if (status != result::OK) {
+      return status;
+    }
   }
 
-  g_eeprom_initialized = false;
-  return ensure_initialized();
+  return result::OK;
 }
 
-result opaque_eeprom::read(const uint32_t address, uint8_t* const p_data,
-                           const size_t len) const noexcept {
+result opaque_nv_memory_eeprom::read(const uint32_t address, uint8_t* const p_data,
+                                     const size_t len) const noexcept {
   if (!config_valid(m_base_virtual_address, m_capacity) ||
       !range_valid(m_capacity, address, len) || (len != 0U && p_data == nullptr)) {
     return result::RECOVERABLE_ERROR;
@@ -163,8 +177,9 @@ result opaque_eeprom::read(const uint32_t address, uint8_t* const p_data,
   return result::OK;
 }
 
-result opaque_eeprom::write(const uint32_t address, const uint8_t* const p_data,
-                            const size_t len) noexcept {
+result opaque_nv_memory_eeprom::write(const uint32_t address,
+                                      const uint8_t* const p_data,
+                                      const size_t len) noexcept {
   if (!config_valid(m_base_virtual_address, m_capacity) ||
       !range_valid(m_capacity, address, len) || (len != 0U && p_data == nullptr)) {
     return result::RECOVERABLE_ERROR;

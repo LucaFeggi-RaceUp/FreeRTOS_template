@@ -1,22 +1,20 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 
 #include "common.hpp"
 
 namespace ru::driver {
-class Eeprom;
+class NvMemory;
 
-struct opaque_eeprom {
+struct opaque_nv_memory {
  public:
-  constexpr opaque_eeprom() noexcept = default;
-  constexpr opaque_eeprom(const uint16_t base_virtual_address,
-                          const uint32_t capacity) noexcept
-      : m_base_virtual_address(base_virtual_address), m_capacity(capacity) {}
+  explicit opaque_nv_memory(uint32_t capacity = k_storage_capacity) noexcept;
 
  private:
-  friend class Eeprom;
+  friend class NvMemory;
 
   result init() noexcept;
   result stop() noexcept;
@@ -25,7 +23,10 @@ struct opaque_eeprom {
   result read(uint32_t address, uint8_t* p_data, size_t len) const noexcept;
   result write(uint32_t address, const uint8_t* p_data, size_t len) noexcept;
 
-  uint16_t m_base_virtual_address{0U};
-  uint32_t m_capacity{0U};
+  static constexpr uint32_t k_storage_capacity{256U};
+
+  std::array<uint8_t, k_storage_capacity> m_storage{};
+  uint32_t m_capacity{k_storage_capacity};
+  bool m_initialized{false};
 };
 }  // namespace ru::driver

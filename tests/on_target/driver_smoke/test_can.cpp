@@ -84,7 +84,7 @@ void can_report_adc(SmokeContext& context, const AdcSample& sample) noexcept {
   put_u16(&payload[0], sample.value);
   put_u16(&payload[2], static_cast<uint16_t>(sample.counter));
   put_u16(&payload[4], static_cast<uint16_t>(error_bits(context)));
-  payload[6] = static_cast<uint8_t>(context.eeprom_summary.readback_ok);
+  payload[6] = static_cast<uint8_t>(context.nv_memory_summary.readback_ok);
   payload[7] = 0U;
 
   send_can(context, context.can1, k_can_id_adc, payload, sizeof(payload),
@@ -93,18 +93,18 @@ void can_report_adc(SmokeContext& context, const AdcSample& sample) noexcept {
            k_error_can2_tx);
 }
 
-void can_report_eeprom(SmokeContext& context) noexcept {
+void can_report_nv_memory(SmokeContext& context) noexcept {
   uint8_t payload[8]{};
-  payload[0] = context.eeprom_summary.valid_previous;
-  payload[1] = context.eeprom_summary.readback_ok;
-  put_u16(&payload[2], static_cast<uint16_t>(context.eeprom_summary.boot_counter));
+  payload[0] = context.nv_memory_summary.valid_previous;
+  payload[1] = context.nv_memory_summary.readback_ok;
+  put_u16(&payload[2], static_cast<uint16_t>(context.nv_memory_summary.boot_counter));
   put_u16(&payload[4],
-          static_cast<uint16_t>(context.eeprom_summary.previous_boot_counter));
-  put_u16(&payload[6], static_cast<uint16_t>(context.eeprom_summary.checksum));
+          static_cast<uint16_t>(context.nv_memory_summary.previous_boot_counter));
+  put_u16(&payload[6], static_cast<uint16_t>(context.nv_memory_summary.checksum));
 
-  send_can(context, context.can1, k_can_id_eeprom, payload, sizeof(payload),
+  send_can(context, context.can1, k_can_id_nv_memory, payload, sizeof(payload),
            k_error_can1_tx);
-  send_can(context, context.can2, k_can_id_eeprom, payload, sizeof(payload),
+  send_can(context, context.can2, k_can_id_nv_memory, payload, sizeof(payload),
            k_error_can2_tx);
 }
 

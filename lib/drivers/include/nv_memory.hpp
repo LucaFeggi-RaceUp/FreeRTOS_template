@@ -4,14 +4,14 @@
 #include <cstdint>
 
 #include "common.hpp"
-#include "eeprom_id.hpp"
-#include "opaque_eeprom.hpp"
+#include "nv_memory_id.hpp"
+#include "opaque_nv_memory.hpp"
 
 namespace ru::driver {
 
-class Eeprom {
+class NvMemory {
  public:
-  Eeprom(EepromId id) noexcept;
+  explicit NvMemory(NvMemoryId id) noexcept;
   static result start() noexcept;
   result init() noexcept;
   result stop() noexcept;
@@ -23,11 +23,11 @@ class Eeprom {
   result write(uint32_t address, const uint8_t* data, size_t len) noexcept;
   result write(uint32_t address, uint8_t value) noexcept;
 
-  EepromId inline id() const noexcept { return m_id; }
+  NvMemoryId id() const noexcept { return m_id; }
 
  private:
-  EepromId m_id;
-  struct opaque_eeprom m_opaque;
+  NvMemoryId m_id;
+  struct opaque_nv_memory m_opaque;
 };
 
 }  // namespace ru::driver

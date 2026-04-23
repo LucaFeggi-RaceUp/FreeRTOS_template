@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "opaque_flash_memory.hpp"
+#include "opaque_nv_memory_flash_region.hpp"
 #include "stm32h5xx_hal.h"
 
 using namespace ru::driver;
@@ -150,16 +150,21 @@ result commit_shadow() noexcept {
 }
 }  // namespace
 
-result opaque_flash_memory::init() noexcept {
+result opaque_nv_memory_flash_region::init() noexcept {
   return validate_layout();
 }
 
-result opaque_flash_memory::stop() noexcept {
+result opaque_nv_memory_flash_region::stop() noexcept {
   return result::OK;
 }
 
-result opaque_flash_memory::read(const uint32_t addr, uint8_t* const p_data,
-                                 const size_t len) const noexcept {
+uint32_t opaque_nv_memory_flash_region::capacity() const noexcept {
+  return static_cast<uint32_t>(storage_size());
+}
+
+result opaque_nv_memory_flash_region::read(const uint32_t addr,
+                                           uint8_t* const p_data,
+                                           const size_t len) const noexcept {
   if (!in_bounds(addr, len) || (len != 0U && p_data == nullptr)) {
     return result::RECOVERABLE_ERROR;
   }
@@ -173,8 +178,9 @@ result opaque_flash_memory::read(const uint32_t addr, uint8_t* const p_data,
   return result::OK;
 }
 
-result opaque_flash_memory::write(const uint32_t addr, const uint8_t* const p_data,
-                                  const size_t len) noexcept {
+result opaque_nv_memory_flash_region::write(const uint32_t addr,
+                                            const uint8_t* const p_data,
+                                            const size_t len) noexcept {
   if (!in_bounds(addr, len) || (len != 0U && p_data == nullptr)) {
     return result::RECOVERABLE_ERROR;
   }
@@ -197,7 +203,8 @@ result opaque_flash_memory::write(const uint32_t addr, const uint8_t* const p_da
   return commit_shadow();
 }
 
-result opaque_flash_memory::erase(const uint32_t addr, const size_t len) noexcept {
+result opaque_nv_memory_flash_region::erase(const uint32_t addr,
+                                            const size_t len) noexcept {
   if (!in_bounds(addr, len)) {
     return result::RECOVERABLE_ERROR;
   }
@@ -218,19 +225,5 @@ result opaque_flash_memory::erase(const uint32_t addr, const size_t len) noexcep
 
   std::memset(g_shadow_storage.data() + addr, k_erased_value, len);
   return commit_shadow();
-}
-
-result opaque_flash_memory::erase_all() noexcept {
-  const auto layout_status = validate_layout();
-  if (layout_status != result::OK) {
-    return layout_status;
-  }
-
-  if (is_erased_range(reinterpret_cast<const uint8_t*>(storage_begin()),
-                      storage_size())) {
-    return result::OK;
-  }
-
-  return with_unlocked_flash([]() noexcept { return erase_storage_sector(); });
 }
 }  // namespace ru::driver

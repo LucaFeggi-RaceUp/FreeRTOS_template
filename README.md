@@ -23,8 +23,8 @@ The template provides:
 - STM32H563 firmware builds.
 - FreeRTOS kernel integration.
 - STM32CubeH5 HAL and CMSIS integration.
-- Driver interfaces for GPIO, ADC, PWM, hardware timers, serial, CAN, flash,
-  EEPROM, and watchdog.
+- Driver interfaces for GPIO, ADC, PWM, hardware timers, serial, CAN,
+  non-volatile memory, and watchdog.
 
 Application code lives in `app`. Platform startup, linker scripts, toolchain
 setup, and MCU-specific boot code live in `instances`.
@@ -53,7 +53,7 @@ STM32Cube libraries.
   selected by the on-target driver smoke-test preset.
 - `app`: application sources linked into the firmware target.
 - `tests/on_target/driver_smoke`: selectable on-target smoke-test application for
-  FreeRTOS, USB reporting, CAN, ADC, GPIO, and EEPROM bring-up.
+  FreeRTOS, USB reporting, CAN, ADC, GPIO, and non-volatile memory bring-up.
 - `third_party`: external dependencies tracked as git submodules.
 
 ## Dependencies
@@ -106,7 +106,7 @@ There are two board-specific configuration layers:
 - `STM32H5XX_DRIVER_CONFIG`: the STM32H5 driver mapping directory under
   `lib/drivers/instances/stm32h5xx/config`. It maps the logical driver ids to
   real STM32 ports, pins, peripheral instances, channels, alternate functions,
-  EEPROM layout, and watchdog resources.
+  non-volatile memory layout, and watchdog resources.
 
 The logical ids are the names used by application code. The backend mapping is
 what makes those names real on a specific board. For example, if the application
@@ -123,8 +123,8 @@ Typical project setup:
 3. Edit `config/my_board/FreeRTOSConfig.h` for the board's FreeRTOS heap,
    priorities, hooks, and enabled features.
 4. Edit the headers in `config/my_board/driver_ids` so they contain the logical
-   resources your application uses, such as LEDs, ADC inputs, timers, serial
-   ports, CAN buses, EEPROM areas, and watchdogs.
+  resources your application uses, such as LEDs, ADC inputs, timers, serial
+  ports, CAN buses, non-volatile memory areas, and watchdogs.
 5. Copy `lib/drivers/instances/stm32h5xx/config/tmpl` to
    `lib/drivers/instances/stm32h5xx/config/my_board`.
 6. Edit `lib/drivers/instances/stm32h5xx/config/my_board/mapping.hpp` so every
@@ -263,7 +263,8 @@ The smoke-test application creates static FreeRTOS tasks for:
 - ADC sampling from `AdcId::POT_0` every 100 ms.
 - USB CDC text reporting.
 - Classic 11-bit CAN status frames on `M_canId::CAN_1` and `M_canId::CAN_2`.
-- EEPROM persistence validation through a boot counter in `EepromId::EEPROM_0`.
+- NvMemory persistence validation through a boot counter in
+  `NvMemoryId::BOOT_COUNTER`.
 
 The current default ADC smoke mapping is `POT_0 -> ADC1/PA0/ADC_CHANNEL_0`.
 Change the `POT_0` entry in
@@ -276,7 +277,7 @@ CAN smoke-test frame IDs:
 - `0x111`: CAN1 receive echo.
 - `0x121`: CAN2 receive echo.
 - `0x130`: ADC sample report.
-- `0x140`: EEPROM boot-counter report.
+- `0x140`: NvMemory boot-counter report.
 
 DBC files are not part of this template. Add DBC generation and generated CAN
 sources in the firmware project that is created from the template.

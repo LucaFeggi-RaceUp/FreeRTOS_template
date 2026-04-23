@@ -2,7 +2,7 @@ set(APP_SOURCES
   app.cpp
   test_adc.cpp
   test_can.cpp
-  test_eeprom.cpp
+  test_nv_memory.cpp
   test_freertos.cpp
   test_report.cpp
 )

@@ -6,22 +6,20 @@
 #include "common.hpp"
 
 namespace ru::driver {
-class FlashMemory;
-struct opaque_eeprom;
+struct opaque_nv_memory;
 
-struct opaque_flash_memory {
+struct opaque_nv_memory_flash_region {
  public:
-  constexpr opaque_flash_memory() noexcept = default;
+  constexpr opaque_nv_memory_flash_region() noexcept = default;
 
  private:
-  friend class FlashMemory;
-  friend struct opaque_eeprom;
+  friend struct opaque_nv_memory;
 
   result init() noexcept;
   result stop() noexcept;
+  uint32_t capacity() const noexcept;
   result read(uint32_t addr, uint8_t* p_data, size_t len) const noexcept;
   result write(uint32_t addr, const uint8_t* p_data, size_t len) noexcept;
   result erase(uint32_t addr, size_t len) noexcept;
-  result erase_all() noexcept;
 };
 }  // namespace ru::driver

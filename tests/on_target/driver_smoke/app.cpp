@@ -19,8 +19,8 @@ void app_start(void) {
   smoke::start_freertos_smoke(g_context);
   smoke::start_adc_smoke(g_context);
   smoke::start_can_smoke(g_context);
-  smoke::run_eeprom_smoke(g_context);
-  smoke::can_report_eeprom(g_context);
+  smoke::run_nv_memory_smoke(g_context);
+  smoke::can_report_nv_memory(g_context);
   smoke::start_report_smoke(g_context);
 
   smoke::usb_line(g_context, "driver-smoke: scheduler starting\r\n");
