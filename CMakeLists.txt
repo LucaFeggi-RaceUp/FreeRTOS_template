@@ -287,29 +287,6 @@ if(DEFINED PLATFORM_LINKER_SCRIPT)
   )
 endif()
 
-if(IS_STM32)
-  set(_firmware_hex "${CMAKE_BINARY_DIR}/firmware.hex")
-  set(_firmware_bin "${CMAKE_BINARY_DIR}/firmware.bin")
-
-  add_custom_command(TARGET firmware POST_BUILD
-    BYPRODUCTS
-      "${_firmware_hex}"
-      "${_firmware_bin}"
-    COMMAND ${CMAKE_OBJCOPY} -O ihex
-      $<TARGET_FILE:firmware>
-      "${_firmware_hex}"
-    COMMAND ${CMAKE_OBJCOPY} -O binary
-      $<TARGET_FILE:firmware>
-      "${_firmware_bin}"
-    COMMENT "firmware.hex and firmware.bin generated as well."
-    VERBATIM
-  )
-
-  if(CMAKE_SIZE)
-    add_custom_command(TARGET firmware POST_BUILD
-      COMMAND ${CMAKE_SIZE} $<TARGET_FILE:firmware>
-      COMMENT "firmware.elf size"
-      VERBATIM
-    )
-  endif()
+if(COMMAND platform_finalize_firmware_target)
+  platform_finalize_firmware_target(firmware)
 endif()

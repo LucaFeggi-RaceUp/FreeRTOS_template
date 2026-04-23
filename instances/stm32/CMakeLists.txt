@@ -72,3 +72,35 @@ set(FIRMWARE_LINK_LIBRARIES
   nosys
   device_hal
 )
+
+function(platform_finalize_firmware_target target_name)
+  get_target_property(_platform_output_name "${target_name}" OUTPUT_NAME)
+  if(NOT _platform_output_name OR _platform_output_name STREQUAL "_platform_output_name-NOTFOUND")
+    set(_platform_output_name "${target_name}")
+  endif()
+
+  set(_platform_firmware_hex "${CMAKE_CURRENT_BINARY_DIR}/${_platform_output_name}.hex")
+  set(_platform_firmware_bin "${CMAKE_CURRENT_BINARY_DIR}/${_platform_output_name}.bin")
+
+  add_custom_command(TARGET "${target_name}" POST_BUILD
+    BYPRODUCTS
+      "${_platform_firmware_hex}"
+      "${_platform_firmware_bin}"
+    COMMAND "${CMAKE_OBJCOPY}" -O ihex
+      $<TARGET_FILE:${target_name}>
+      "${_platform_firmware_hex}"
+    COMMAND "${CMAKE_OBJCOPY}" -O binary
+      $<TARGET_FILE:${target_name}>
+      "${_platform_firmware_bin}"
+    COMMENT "${_platform_output_name}.hex and ${_platform_output_name}.bin generated as well."
+    VERBATIM
+  )
+
+  if(CMAKE_SIZE)
+    add_custom_command(TARGET "${target_name}" POST_BUILD
+      COMMAND "${CMAKE_SIZE}" $<TARGET_FILE:${target_name}>
+      COMMENT "${_platform_output_name}.elf size"
+      VERBATIM
+    )
+  endif()
+endfunction()
