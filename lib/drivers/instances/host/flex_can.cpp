@@ -45,13 +45,13 @@ expected::expected<CanMessageTs, result> Flex_can::try_read(uint8_t mb) noexcept
   return make_dummy_can_message_ts();
 }
 
-result Flex_can::write(const CanMessage& message) noexcept {
+result Flex_can::write(const CanFrameView& message) noexcept {
   (void)message;
   LOG("Flex_can " << toText(m_id) << " write");
   return result::OK;
 }
 
-result Flex_can::try_write(const CanMessage& message) noexcept {
+result Flex_can::try_write(const CanFrameView& message) noexcept {
   (void)message;
   LOG("Flex_can " << toText(m_id) << " try_write");
   return result::OK;
@@ -225,11 +225,11 @@ expected::expected<bool, result> Flex_canRx::is_filter_enabled(uint8_t id) {
   return const_cast<Flex_can&>(m_can).is_filter_enabled(id);
 }
 
-result Flex_canTx::write(const CanMessage& message) noexcept {
+result Flex_canTx::write(const CanFrameView& message) noexcept {
   return const_cast<Flex_can&>(m_can).write(message);
 }
 
-result Flex_canTx::try_write(const CanMessage& message) noexcept {
+result Flex_canTx::try_write(const CanFrameView& message) noexcept {
   return const_cast<Flex_can&>(m_can).try_write(message);
 }
 

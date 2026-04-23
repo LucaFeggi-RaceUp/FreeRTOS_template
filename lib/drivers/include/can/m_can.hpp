@@ -54,8 +54,20 @@ class M_can {
 
   expected::expected<CanMessageTs, result> read(M_fifo fifo) noexcept;
   expected::expected<CanMessageTs, result> try_read(M_fifo fifo) noexcept;
-  result write(const CanMessage& message) noexcept;
-  result try_write(const CanMessage& message) noexcept;
+  result write(const CanFrameView& message) noexcept;
+  result try_write(const CanFrameView& message) noexcept;
+
+  template <typename Message>
+  auto write(const Message& message) noexcept
+      -> decltype(make_can_frame_view(message), result{}) {
+    return write(make_can_frame_view(message));
+  }
+
+  template <typename Message>
+  auto try_write(const Message& message) noexcept
+      -> decltype(make_can_frame_view(message), result{}) {
+    return try_write(make_can_frame_view(message));
+  }
 
   M_canId inline id() const noexcept { return m_id; }
 
@@ -130,8 +142,20 @@ class M_canRx {
 class M_canTx {
  public:
   explicit inline M_canTx(M_can& can) noexcept : m_can(can) {}
-  result inline write(const CanMessage& message) noexcept;
-  result inline try_write(const CanMessage& message) noexcept;
+  result inline write(const CanFrameView& message) noexcept;
+  result inline try_write(const CanFrameView& message) noexcept;
+
+  template <typename Message>
+  auto write(const Message& message) noexcept
+      -> decltype(make_can_frame_view(message), result{}) {
+    return write(make_can_frame_view(message));
+  }
+
+  template <typename Message>
+  auto try_write(const Message& message) noexcept
+      -> decltype(make_can_frame_view(message), result{}) {
+    return try_write(make_can_frame_view(message));
+  }
 
   M_canId inline id() const noexcept { return m_can.id(); }
 

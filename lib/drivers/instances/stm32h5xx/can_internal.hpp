@@ -138,7 +138,8 @@ CanControllerConfig current_controller_config(const opaque_can& config) noexcept
 result stop_controller(const opaque_can& config) noexcept;
 expected::expected<CanMessageTs, result> read_fifo_message(const opaque_can& config,
                                                           M_fifo fifo) noexcept;
-result write_controller_message(const opaque_can& config, const CanMessage& message) noexcept;
+result write_controller_message(const opaque_can& config,
+                                const CanFrameView& message) noexcept;
 result configure_m_filter(const opaque_can& config, const M_filter& filter, uint8_t id,
                           bool enabled) noexcept;
 result configure_bx_filter(const opaque_can& config, const Bx_filter& filter, uint8_t id,

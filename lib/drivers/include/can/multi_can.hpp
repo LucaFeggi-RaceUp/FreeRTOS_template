@@ -64,8 +64,20 @@ class Can {
   expected::expected<CanMessageTs, result> try_read(uint8_t buffer) noexcept;
   expected::expected<CanMessageTs, result> try_read(Multi_fifo fifo) noexcept;
 
-  result write(const CanMessage message) noexcept;
-  result try_write(const CanMessage message) noexcept;
+  result write(const CanFrameView& message) noexcept;
+  result try_write(const CanFrameView& message) noexcept;
+
+  template <typename Message>
+  auto write(const Message& message) noexcept
+      -> decltype(make_can_frame_view(message), result{}) {
+    return write(make_can_frame_view(message));
+  }
+
+  template <typename Message>
+  auto try_write(const Message& message) noexcept
+      -> decltype(make_can_frame_view(message), result{}) {
+    return try_write(make_can_frame_view(message));
+  }
 
   result set_rx_callback(Multi_fifo fifo, void (*callback)(CanMessageTs));
   result set_rx_callback(uint8_t buffer, void (*callback)(CanMessageTs));
@@ -151,8 +163,20 @@ class CanTx {
   explicit inline CanTx(Can& can) noexcept : m_can(can) {}
   Multi_canId inline id() const noexcept { return m_can.id(); }
 
-  result write(const CanMessage message) noexcept;
-  result try_write(const CanMessage message) noexcept;
+  result write(const CanFrameView& message) noexcept;
+  result try_write(const CanFrameView& message) noexcept;
+
+  template <typename Message>
+  auto write(const Message& message) noexcept
+      -> decltype(make_can_frame_view(message), result{}) {
+    return write(make_can_frame_view(message));
+  }
+
+  template <typename Message>
+  auto try_write(const Message& message) noexcept
+      -> decltype(make_can_frame_view(message), result{}) {
+    return try_write(make_can_frame_view(message));
+  }
 
   expected::expected<Timestamp, result> get_timestamp();
 

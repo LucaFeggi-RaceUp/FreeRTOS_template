@@ -22,11 +22,11 @@ expected::expected<CanMessageTs, result> CanRx::try_read(Multi_fifo fifo) noexce
   return const_cast<Can&>(m_can).try_read(fifo);
 }
 
-result CanTx::write(const CanMessage message) noexcept {
+result CanTx::write(const CanFrameView& message) noexcept {
   return const_cast<Can&>(m_can).write(message);
 }
 
-result CanTx::try_write(const CanMessage message) noexcept {
+result CanTx::try_write(const CanFrameView& message) noexcept {
   return const_cast<Can&>(m_can).try_write(message);
 }
 
@@ -69,13 +69,13 @@ expected::expected<CanMessageTs, result> Can::try_read(Multi_fifo fifo) noexcept
   return make_dummy_can_message_ts();
 }
 
-result Can::write(const CanMessage message) noexcept {
+result Can::write(const CanFrameView& message) noexcept {
   (void)message;
   LOG("Multi_can " << toText(m_id) << " write");
   return result::OK;
 }
 
-result Can::try_write(const CanMessage message) noexcept {
+result Can::try_write(const CanFrameView& message) noexcept {
   (void)message;
   LOG("Multi_can " << toText(m_id) << " try_write");
   return result::OK;

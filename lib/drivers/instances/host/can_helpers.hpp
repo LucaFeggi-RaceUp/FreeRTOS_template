@@ -6,12 +6,9 @@
 
 namespace ru::driver {
 inline CanMessage make_dummy_can_message() noexcept {
-  CanMessage message{};
-  message.id = CanId::standard_unchecked(0U);
-  message.len = 1U;
-  message.frame_format = CanFrameFormat::Classic;
-  message.full_word = 0U;
-  return message;
+  ClassicStdCanMessage frame{};
+  (void)frame.assign(0U, CanFrameFormat::Classic, nullptr, 0U);
+  return CanMessage{frame};
 }
 
 inline CanMessageTs make_dummy_can_message_ts() noexcept {

@@ -19,11 +19,11 @@ expected::expected<CanMessageTs, result> M_canRx::try_read(M_fifo fifo) noexcept
   return const_cast<M_can&>(m_can).try_read(fifo);
 }
 
-result M_canTx::write(const CanMessage& message) noexcept {
+result M_canTx::write(const CanFrameView& message) noexcept {
   return const_cast<M_can&>(m_can).write(message);
 }
 
-result M_canTx::try_write(const CanMessage& message) noexcept {
+result M_canTx::try_write(const CanFrameView& message) noexcept {
   return const_cast<M_can&>(m_can).try_write(message);
 }
 
@@ -66,11 +66,11 @@ expected::expected<CanMessageTs, result> M_can::try_read(M_fifo fifo) noexcept {
   return read(fifo);
 }
 
-result M_can::write(const CanMessage& message) noexcept {
+result M_can::write(const CanFrameView& message) noexcept {
   return write_controller_message(m_opaque, message);
 }
 
-result M_can::try_write(const CanMessage& message) noexcept {
+result M_can::try_write(const CanFrameView& message) noexcept {
   if (!initialized(m_opaque) || !started(m_opaque)) {
     return result::RECOVERABLE_ERROR;
   }

@@ -93,14 +93,32 @@ constexpr uint32_t normalize_bx16_value(const uint16_t value) noexcept {
 
 CanMessageTs make_message_ts(const FDCAN_RxHeaderTypeDef& header,
                             const uint8_t* const payload) noexcept {
-  CanMessage message{};
   const auto id_format = can_id_format_from_header(header);
-  message.id = id_format == CanIdFormat::Extended
-                   ? CanId::extended_unchecked(header.Identifier)
-                   : CanId::standard_unchecked(header.Identifier);
-  message.frame_format = can_frame_format_from_header(header);
-  message.len = fdcan_length_from_dlc(header.DataLength);
-  std::memcpy(message.bytes, payload, message.len);
+  const auto frame_format = can_frame_format_from_header(header);
+  const auto len = fdcan_length_from_dlc(header.DataLength);
+  CanMessage message{};
+
+  if (id_format == CanIdFormat::Extended) {
+    if (frame_format == CanFrameFormat::Classic) {
+      ClassicExtCanMessage frame{};
+      (void)frame.assign(header.Identifier, frame_format, payload, len);
+      message = frame;
+    } else {
+      FdExtCanMessage frame{};
+      (void)frame.assign(header.Identifier, frame_format, payload, len);
+      message = frame;
+    }
+  } else {
+    if (frame_format == CanFrameFormat::Classic) {
+      ClassicStdCanMessage frame{};
+      (void)frame.assign(header.Identifier, frame_format, payload, len);
+      message = frame;
+    } else {
+      FdStdCanMessage frame{};
+      (void)frame.assign(header.Identifier, frame_format, payload, len);
+      message = frame;
+    }
+  }
 
   const auto filter =
       header.IsFilterMatchingFrame == 0U
@@ -547,7 +565,7 @@ expected::expected<CanMessageTs, result> read_fifo_message(const opaque_can& con
 }
 
 result write_controller_message(const opaque_can& config,
-                                const CanMessage& message) noexcept {
+                                const CanFrameView& message) noexcept {
   if (!initialized(config) || !started(config)) {
     return result::RECOVERABLE_ERROR;
   }
@@ -561,7 +579,7 @@ result write_controller_message(const opaque_can& config,
   header.Identifier = message.id.value;
   header.IdType = fdcan_id_type(message.id.format);
   header.TxFrameType = FDCAN_DATA_FRAME;
-  header.DataLength = fdcan_dlc_from_length(static_cast<uint8_t>(message.len));
+  header.DataLength = fdcan_dlc_from_length(message.len);
   header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
   header.BitRateSwitch = fdcan_bitrate_switch(message.frame_format);
   header.FDFormat = fdcan_tx_frame_format(message.frame_format);
@@ -569,7 +587,7 @@ result write_controller_message(const opaque_can& config,
   header.MessageMarker = 0U;
 
   uint8_t payload[k_can_fd_max_payload]{};
-  std::memcpy(payload, message.bytes, message.len);
+  std::memcpy(payload, message.data, message.len);
   return from_hal_status(HAL_FDCAN_AddMessageToTxFifoQ(&handle(config), &header, payload));
 }
 

@@ -25,7 +25,7 @@ void send_can(SmokeContext& context, ru::driver::M_can& can,
     return;
   }
 
-  const auto message = ru::driver::CanMessage::classic_standard(id, payload, len);
+  const auto message = ru::driver::can_message::classic_standard(id, payload, len);
   if (!message.has_value()) {
     set_error(context, error_bit);
     return;
@@ -42,14 +42,13 @@ void echo_rx(SmokeContext& context, ru::driver::M_can& can,
     return;
   }
 
+  const auto frame = ru::driver::make_can_frame_view(received.value().message);
   uint8_t payload[8]{};
   payload[0] = source;
-  put_u16(&payload[1],
-          static_cast<uint16_t>(received.value().message.id.value & 0x7FFU));
-  payload[3] = received.value().message.len;
-  const auto copy_len =
-      received.value().message.len < 4U ? received.value().message.len : 4U;
-  std::memcpy(&payload[4], received.value().message.bytes, copy_len);
+  put_u16(&payload[1], static_cast<uint16_t>(frame.id.value & 0x7FFU));
+  payload[3] = frame.len;
+  const auto copy_len = frame.len < 4U ? frame.len : 4U;
+  std::memcpy(&payload[4], frame.data, copy_len);
   send_can(context, can, reply_id, payload, sizeof(payload), error_bit);
 }
 }  // namespace
