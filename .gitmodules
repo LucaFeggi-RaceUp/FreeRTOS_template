@@ -1,3 +1,17 @@
+[submodule "third_party/expected"]
+	path = third_party/expected
+	url = git@github.com:TartanLlama/expected.git
+
 [submodule "third_party/FreeRTOS-LTS"]
 	path = third_party/FreeRTOS-LTS
-	url = https://github.com/FreeRTOS/FreeRTOS-LTS.git
+	url = git@github.com:FreeRTOS/FreeRTOS-LTS.git
+
+[submodule "third_party/STM32/STM32H5/STM32CubeH5"]
+	path = third_party/STM32/STM32H5/STM32CubeH5
+	url = git@github.com:STMicroelectronics/STM32CubeH5.git
+
+[submodule "third_party/STM32/STM32H5/stm32-util-eeprom-emulation"]
+	path = third_party/STM32/STM32H5/stm32-util-eeprom-emulation
+	url = git@github.com:STMicroelectronics/stm32-util-eeprom-emulation.git
+
+
