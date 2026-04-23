@@ -17,6 +17,7 @@ class Eeprom {
   result stop() noexcept;
 
   uint32_t capacity() const noexcept;
+  result clear() noexcept;
   result read(uint32_t address, uint8_t* data, size_t len) noexcept;
   expected::expected<uint8_t, result> read(uint32_t address) noexcept;
   result write(uint32_t address, const uint8_t* data, size_t len) noexcept;

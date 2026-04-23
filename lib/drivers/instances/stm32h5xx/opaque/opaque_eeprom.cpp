@@ -122,6 +122,21 @@ uint32_t opaque_eeprom::capacity() const noexcept {
   return m_capacity;
 }
 
+result opaque_eeprom::clear() noexcept {
+  if (!config_valid(m_base_virtual_address, m_capacity)) {
+    return result::UNRECOVERABLE_ERROR;
+  }
+
+  const auto format_status = EE_Format(EE_FORCED_ERASE);
+  if (format_status != EE_OK) {
+    g_eeprom_initialized = false;
+    return result::RECOVERABLE_ERROR;
+  }
+
+  g_eeprom_initialized = false;
+  return ensure_initialized();
+}
+
 result opaque_eeprom::read(const uint32_t address, uint8_t* const p_data,
                            const size_t len) const noexcept {
   if (!config_valid(m_base_virtual_address, m_capacity) ||

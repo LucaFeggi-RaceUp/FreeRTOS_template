@@ -38,6 +38,10 @@ uint32_t Eeprom::capacity() const noexcept {
   return m_opaque.capacity();
 }
 
+result Eeprom::clear() noexcept {
+  return m_opaque.clear();
+}
+
 result Eeprom::read(const uint32_t address, uint8_t* const p_data,
                     const size_t len) noexcept {
   return m_opaque.read(address, p_data, len);

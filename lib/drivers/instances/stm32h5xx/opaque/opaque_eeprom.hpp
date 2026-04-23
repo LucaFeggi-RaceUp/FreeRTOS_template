@@ -21,6 +21,7 @@ struct opaque_eeprom {
   result init() noexcept;
   result stop() noexcept;
   uint32_t capacity() const noexcept;
+  result clear() noexcept;
   result read(uint32_t address, uint8_t* p_data, size_t len) const noexcept;
   result write(uint32_t address, const uint8_t* p_data, size_t len) noexcept;
 

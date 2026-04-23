@@ -1,5 +1,7 @@
 #include "eeprom.hpp"
 
+#include <algorithm>
+
 #include "utils/common.hpp"
 
 using namespace ru::driver;
@@ -36,6 +38,15 @@ result Eeprom::stop() noexcept {
 
 uint32_t Eeprom::capacity() const noexcept {
   return static_cast<uint32_t>(m_opaque.storage.size());
+}
+
+result Eeprom::clear() noexcept {
+  if (!m_opaque.initialized) {
+    return result::RECOVERABLE_ERROR;
+  }
+
+  std::fill(m_opaque.storage.begin(), m_opaque.storage.end(), 0xFFU);
+  return result::OK;
 }
 
 result Eeprom::read(const uint32_t address, uint8_t* const p_data,
