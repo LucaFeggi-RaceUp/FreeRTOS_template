@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 ## Instance selection --------
 
 if(NOT DEFINED INSTANCE)
-  message(FATAL_ERROR "Use -DINSTANCE=<host|stm32h563vit6x>")
+  message(FATAL_ERROR "Use -DINSTANCE=<host|stm32h563vit6x|stm32h562rgt6>")
 endif()
 
 # Check if instance is an STM32 target

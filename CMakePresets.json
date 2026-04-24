@@ -28,6 +28,38 @@
       }
     },
     {
+      "name": "stm32h562-debug",
+      "displayName": "STM32H562 Debug",
+      "generator": "Ninja",
+      "binaryDir": ".build/stm32h562-debug",
+      "cacheVariables": {
+        "INSTANCE": "stm32h562rgt6",
+        "DRIVERS_INSTANCE": "stm32h5xx",
+        "CONFIG_DIR": "${sourceDir}/config/tmpl",
+        "STM32H5XX_DRIVER_CONFIG": "tmpl",
+        "STM32CubeH5_ROOT": "${sourceDir}/third_party/STM32/STM32H5/STM32CubeH5",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/instances/stm32/toolchain.cmake",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "stm32h562-release",
+      "displayName": "STM32H562 Release",
+      "generator": "Ninja",
+      "binaryDir": ".build/stm32h562-release",
+      "cacheVariables": {
+        "INSTANCE": "stm32h562rgt6",
+        "DRIVERS_INSTANCE": "stm32h5xx",
+        "CONFIG_DIR": "${sourceDir}/config/tmpl",
+        "STM32H5XX_DRIVER_CONFIG": "tmpl",
+        "STM32CubeH5_ROOT": "${sourceDir}/third_party/STM32/STM32H5/STM32CubeH5",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/instances/stm32/toolchain.cmake",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "stm32h563-debug",
       "displayName": "STM32H563 Debug",
       "generator": "Ninja",
@@ -76,6 +108,20 @@
       ]
     },
     {
+      "name": "stm32h562-debug",
+      "configurePreset": "stm32h562-debug",
+      "targets": [
+        "firmware"
+      ]
+    },
+    {
+      "name": "stm32h562-release",
+      "configurePreset": "stm32h562-release",
+      "targets": [
+        "firmware"
+      ]
+    },
+    {
       "name": "stm32h563-debug",
       "configurePreset": "stm32h563-debug",
       "targets": [
@@ -116,6 +162,34 @@
         {
           "type": "build",
           "name": "host-release"
+        }
+      ]
+    },
+    {
+      "name": "stm32h562-debug",
+      "displayName": "STM32H562 Debug (configure + build)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "stm32h562-debug"
+        },
+        {
+          "type": "build",
+          "name": "stm32h562-debug"
+        }
+      ]
+    },
+    {
+      "name": "stm32h562-release",
+      "displayName": "STM32H562 Release (configure + build)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "stm32h562-release"
+        },
+        {
+          "type": "build",
+          "name": "stm32h562-release"
         }
       ]
     },

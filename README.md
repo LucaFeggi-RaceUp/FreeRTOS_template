@@ -1,7 +1,7 @@
 # FreeRTOS STM32H5 Template
 
 This repository is a CMake firmware template for FreeRTOS projects that need a
-portable driver layer, a host build, and an STM32H563 firmware build.
+portable driver layer, a host build, and STM32H5 firmware builds.
 
 The template exists to provide a clean starting point for MCU firmware based on
 FreeRTOS without tying application code to one device from the beginning. It
@@ -13,14 +13,14 @@ Its core goal is portability. Application code should use the driver interfaces
 in `lib/drivers/include` when it needs to run on both host and firmware targets.
 Device-specific APIs such as STM32 HAL and CMSIS remain available when needed,
 but using them directly makes that code specific to the corresponding instance.
-The current firmware implementation targets STM32H563 devices; support for new
-MCU families should be added through new `instances` entries and matching driver
-backends.
+The current firmware implementation targets STM32H563 and STM32H562 devices;
+support for new MCU families should be added through new `instances` entries
+and matching driver backends.
 
 The template provides:
 
 - Host builds for local development on Windows and Linux.
-- STM32H563 firmware builds.
+- STM32H563 and STM32H562 firmware builds.
 - FreeRTOS kernel integration.
 - STM32CubeH5 HAL and CMSIS integration.
 - Driver interfaces for GPIO, ADC, PWM, hardware timers, serial, CAN,
@@ -185,10 +185,18 @@ Build the STM32H563 target:
 cmake --workflow --preset stm32h563-debug
 ```
 
+Build the STM32H562 target:
+
+```bash
+cmake --workflow --preset stm32h562-debug
+```
+
 Available workflows:
 
 - `host-debug`
 - `host-release`
+- `stm32h562-debug`
+- `stm32h562-release`
 - `stm32h563-debug`
 - `stm32h563-release`
 
@@ -228,10 +236,11 @@ Driver ids and `FreeRTOSConfig.h` are selected from the root `CONFIG_DIR`.
 STM32H5 pin and peripheral mapping is selected from
 `lib/drivers/instances/stm32h5xx/config/<STM32H5XX_DRIVER_CONFIG>/mapping.hpp`.
 
-## STM32H563 Setup
+## STM32H5 Setup
 
 The STM32 target is selected through the `INSTANCE` CMake cache variable. The
-provided presets set this automatically to `stm32h563vit6x`.
+provided presets set this automatically to `stm32h563vit6x` or
+`stm32h562rgt6`.
 
 System clock and HAL initialization are owned by the STM32H5 common driver startup.
 The default STM32 `main.cpp` stays small: it starts the common, timer, and
