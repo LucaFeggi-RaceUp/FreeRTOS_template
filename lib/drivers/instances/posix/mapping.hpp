@@ -12,9 +12,11 @@
 
 #define RU_POSIX_PWM_MAP(X)
 
-#define RU_POSIX_BX_CAN_MAP(X)                            \
+#define RU_POSIX_M_CAN_MAP(X)                             \
   X(CAN_1, can0)                                          \
   X(CAN_2, can1)
+
+#define RU_POSIX_BX_CAN_MAP(X)
 
 #define RU_POSIX_SERIAL_MAP(X)                            \
   X(USB, RU_POSIX_SERIAL_DEVICE)

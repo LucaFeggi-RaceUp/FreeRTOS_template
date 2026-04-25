@@ -1,11 +1,6 @@
 set(_drivers_instance_dir "${CMAKE_CURRENT_LIST_DIR}")
 include("${CMAKE_CURRENT_LIST_DIR}/../instance_layout.cmake")
 
-list(REMOVE_ITEM DRIVERS_INSTANCE_SOURCES
-  "${CMAKE_CURRENT_LIST_DIR}/flex_can.cpp"
-  "${CMAKE_CURRENT_LIST_DIR}/multi_can.cpp"
-)
-
 list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(STM32CubeH5 REQUIRED MODULE)
 
@@ -72,17 +67,25 @@ set(_stm32h5_eeprom_emul_root
   "${CMAKE_CURRENT_LIST_DIR}/../../../../third_party/STM32/STM32H5/stm32-util-eeprom-emulation"
 )
 
-if(NOT EXISTS "${_stm32h5_eeprom_emul_root}/core/eeprom_emul_core.c")
-  message(FATAL_ERROR
-    "drivers stm32h5xx: missing ST EEPROM emulation submodule at "
-    "${_stm32h5_eeprom_emul_root}. Run git submodule update --init --recursive."
+_drivers_id_list_has_entries(
+  _stm32h5xx_has_nv_memory
+  "nv_memory_id.hpp"
+  "NV_MEMORY_LIST"
+)
+
+if(_stm32h5xx_has_nv_memory)
+  if(NOT EXISTS "${_stm32h5_eeprom_emul_root}/core/eeprom_emul_core.c")
+    message(FATAL_ERROR
+      "drivers stm32h5xx: missing ST EEPROM emulation submodule at "
+      "${_stm32h5_eeprom_emul_root}. Run git submodule update --init --recursive."
+    )
+  endif()
+
+  list(APPEND DRIVERS_INSTANCE_SOURCES
+    "${_stm32h5_eeprom_emul_root}/core/eeprom_emul_core.c"
+    "${_stm32h5_eeprom_emul_root}/core/algo/eeprom_algo_flitf.c"
   )
 endif()
-
-list(APPEND DRIVERS_INSTANCE_SOURCES
-  "${_stm32h5_eeprom_emul_root}/core/eeprom_emul_core.c"
-  "${_stm32h5_eeprom_emul_root}/core/algo/eeprom_algo_flitf.c"
-)
 
 set(_stm32h5_usbx_root
   "${STM32CubeH5_ROOT_DIR}/Middlewares/ST/usbx"
@@ -121,16 +124,21 @@ list(APPEND DRIVERS_INSTANCE_PUBLIC_INCLUDE_DIRS
 
 list(APPEND DRIVERS_INSTANCE_PRIVATE_INCLUDE_DIRS
   "${_stm32h5xx_driver_config_dir}"
-  "${_stm32h5_eeprom_emul_root}/core"
-  "${_stm32h5_eeprom_emul_root}/core/algo"
-  "${_stm32h5_eeprom_emul_root}/interface_flash"
-  "${_stm32h5_eeprom_emul_root}/interface_crc"
   "${_stm32h5_usbx_root}/common/core/inc"
   "${_stm32h5_usbx_root}/common/usbx_device_classes/inc"
   "${_stm32h5_usbx_root}/common/usbx_stm32_device_controllers"
   "${_stm32h5_usbx_root}/ports/cortex_m4/gnu/inc"
   "${CMAKE_CURRENT_LIST_DIR}/usb"
 )
+
+if(_stm32h5xx_has_nv_memory)
+  list(APPEND DRIVERS_INSTANCE_PRIVATE_INCLUDE_DIRS
+    "${_stm32h5_eeprom_emul_root}/core"
+    "${_stm32h5_eeprom_emul_root}/core/algo"
+    "${_stm32h5_eeprom_emul_root}/interface_flash"
+    "${_stm32h5_eeprom_emul_root}/interface_crc"
+  )
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   set(_stm32h5xx_probe_source "${CMAKE_CURRENT_BINARY_DIR}/stm32h5xx_toolchain_probe.cpp")

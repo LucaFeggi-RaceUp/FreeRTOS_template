@@ -1,11 +1,19 @@
 #include "can/m_can.hpp"
 
+#include <array>
+
 #include "can_internal.hpp"
 
 using namespace ru::driver;
 
 namespace {
-constexpr M_canId k_default_m_can_id = M_canId::CAN_1;
+#define RU_STM32H5XX_M_CAN_ID_VALUE(name) M_canId::name,
+constexpr auto k_m_can_ids =
+    std::array<M_canId, static_cast<std::size_t>(M_canId::COUNT)>{
+        M_CAN_LIST(RU_STM32H5XX_M_CAN_ID_VALUE)};
+#undef RU_STM32H5XX_M_CAN_ID_VALUE
+
+constexpr M_canId k_default_m_can_id = k_m_can_ids[0U];
 }  // namespace
 
 namespace ru::driver {

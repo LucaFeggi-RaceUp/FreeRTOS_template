@@ -29,14 +29,13 @@ struct can_state {
 
 can_state& state(const Bx_canId id) noexcept {
   switch (id) {
-    case Bx_canId::CAN_1: {
+#define RU_POSIX_BX_CAN_STATE_CASE(enum_name, wrapper_name) \
+    case Bx_canId::enum_name: {                             \
       static can_state value{};
       return value;
     }
-    case Bx_canId::CAN_2: {
-      static can_state value{};
-      return value;
-    }
+    RU_POSIX_BX_CAN_MAP(RU_POSIX_BX_CAN_STATE_CASE)
+#undef RU_POSIX_BX_CAN_STATE_CASE
     default: {
       static can_state value{};
       return value;

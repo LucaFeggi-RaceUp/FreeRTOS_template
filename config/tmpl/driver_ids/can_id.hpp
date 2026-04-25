@@ -4,8 +4,10 @@
 
 namespace ru::driver {
 
-#define M_CAN_LIST(X)
-#define BX_CAN_LIST(X) X(CAN_1) X(CAN_2)
+#define M_CAN_LIST(X)                               \
+  X(CAN_1)                                          \
+  X(CAN_2)
+#define BX_CAN_LIST(X)
 #define FLEX_CAN_LIST(X)
 #define MULTI_CAN_LIST(X)
 
