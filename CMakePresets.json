@@ -2,68 +2,52 @@
   "version": 6,
   "configurePresets": [
     {
-      "name": "host-debug",
-      "displayName": "Host Debug",
+      "name": "posix-console",
+      "displayName": "POSIX Console",
       "generator": "Ninja",
-      "binaryDir": ".build/host-debug",
+      "binaryDir": ".build/posix-console",
       "cacheVariables": {
-        "INSTANCE": "host",
-        "DRIVERS_INSTANCE": "host",
+        "INSTANCE": "posix",
+        "DRIVERS_INSTANCE": "console",
         "CONFIG_DIR": "${sourceDir}/config/tmpl",
+        "CMAKE_TRY_COMPILE_TARGET_TYPE": "STATIC_LIBRARY",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "host-release",
-      "displayName": "Host Release",
+      "name": "posix-debug",
+      "displayName": "POSIX Debug",
       "generator": "Ninja",
-      "binaryDir": ".build/host-release",
+      "binaryDir": ".build/posix-debug",
       "cacheVariables": {
-        "INSTANCE": "host",
-        "DRIVERS_INSTANCE": "host",
+        "INSTANCE": "posix",
+        "DRIVERS_INSTANCE": "posix",
         "CONFIG_DIR": "${sourceDir}/config/tmpl",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "stm32h562-debug",
-      "displayName": "STM32H562 Debug",
-      "generator": "Ninja",
-      "binaryDir": ".build/stm32h562-debug",
-      "cacheVariables": {
-        "INSTANCE": "stm32h562rgt6",
-        "DRIVERS_INSTANCE": "stm32h5xx",
-        "CONFIG_DIR": "${sourceDir}/config/tmpl",
-        "STM32H5XX_DRIVER_CONFIG": "tmpl",
-        "STM32CubeH5_ROOT": "${sourceDir}/third_party/STM32/STM32H5/STM32CubeH5",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/instances/stm32/toolchain.cmake",
+        "CMAKE_TRY_COMPILE_TARGET_TYPE": "STATIC_LIBRARY",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "stm32h562-release",
-      "displayName": "STM32H562 Release",
+      "name": "posix-release",
+      "displayName": "POSIX Release",
       "generator": "Ninja",
-      "binaryDir": ".build/stm32h562-release",
+      "binaryDir": ".build/posix-release",
       "cacheVariables": {
-        "INSTANCE": "stm32h562rgt6",
-        "DRIVERS_INSTANCE": "stm32h5xx",
+        "INSTANCE": "posix",
+        "DRIVERS_INSTANCE": "posix",
         "CONFIG_DIR": "${sourceDir}/config/tmpl",
-        "STM32H5XX_DRIVER_CONFIG": "tmpl",
-        "STM32CubeH5_ROOT": "${sourceDir}/third_party/STM32/STM32H5/STM32CubeH5",
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/instances/stm32/toolchain.cmake",
+        "CMAKE_TRY_COMPILE_TARGET_TYPE": "STATIC_LIBRARY",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "stm32h563-debug",
-      "displayName": "STM32H563 Debug",
+      "name": "stm32h563vit6x-debug",
+      "displayName": "STM32H563VIT6x Debug",
       "generator": "Ninja",
-      "binaryDir": ".build/stm32h563-debug",
+      "binaryDir": ".build/stm32h563vit6x-debug",
       "cacheVariables": {
         "INSTANCE": "stm32h563vit6x",
         "DRIVERS_INSTANCE": "stm32h5xx",
@@ -76,12 +60,44 @@
       }
     },
     {
-      "name": "stm32h563-release",
-      "displayName": "STM32H563 Release",
+      "name": "stm32h563vit6x-release",
+      "displayName": "STM32H563VIT6x Release",
       "generator": "Ninja",
-      "binaryDir": ".build/stm32h563-release",
+      "binaryDir": ".build/stm32h563vit6x-release",
       "cacheVariables": {
         "INSTANCE": "stm32h563vit6x",
+        "DRIVERS_INSTANCE": "stm32h5xx",
+        "CONFIG_DIR": "${sourceDir}/config/tmpl",
+        "STM32H5XX_DRIVER_CONFIG": "tmpl",
+        "STM32CubeH5_ROOT": "${sourceDir}/third_party/STM32/STM32H5/STM32CubeH5",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/instances/stm32/toolchain.cmake",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "stm32h562rgt6-debug",
+      "displayName": "STM32H562RGT6 Debug",
+      "generator": "Ninja",
+      "binaryDir": ".build/stm32h562rgt6-debug",
+      "cacheVariables": {
+        "INSTANCE": "stm32h562rgt6",
+        "DRIVERS_INSTANCE": "stm32h5xx",
+        "CONFIG_DIR": "${sourceDir}/config/tmpl",
+        "STM32H5XX_DRIVER_CONFIG": "tmpl",
+        "STM32CubeH5_ROOT": "${sourceDir}/third_party/STM32/STM32H5/STM32CubeH5",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/instances/stm32/toolchain.cmake",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "stm32h562rgt6-release",
+      "displayName": "STM32H562RGT6 Release",
+      "generator": "Ninja",
+      "binaryDir": ".build/stm32h562rgt6-release",
+      "cacheVariables": {
+        "INSTANCE": "stm32h562rgt6",
         "DRIVERS_INSTANCE": "stm32h5xx",
         "CONFIG_DIR": "${sourceDir}/config/tmpl",
         "STM32H5XX_DRIVER_CONFIG": "tmpl",
@@ -94,43 +110,50 @@
   ],
   "buildPresets": [
     {
-      "name": "host-debug",
-      "configurePreset": "host-debug",
+      "name": "posix-console",
+      "configurePreset": "posix-console",
       "targets": [
         "firmware"
       ]
     },
     {
-      "name": "host-release",
-      "configurePreset": "host-release",
+      "name": "posix-debug",
+      "configurePreset": "posix-debug",
       "targets": [
         "firmware"
       ]
     },
     {
-      "name": "stm32h562-debug",
-      "configurePreset": "stm32h562-debug",
+      "name": "posix-release",
+      "configurePreset": "posix-release",
       "targets": [
         "firmware"
       ]
     },
     {
-      "name": "stm32h562-release",
-      "configurePreset": "stm32h562-release",
+      "name": "stm32h563vit6x-debug",
+      "configurePreset": "stm32h563vit6x-debug",
       "targets": [
         "firmware"
       ]
     },
     {
-      "name": "stm32h563-debug",
-      "configurePreset": "stm32h563-debug",
+      "name": "stm32h563vit6x-release",
+      "configurePreset": "stm32h563vit6x-release",
       "targets": [
         "firmware"
       ]
     },
     {
-      "name": "stm32h563-release",
-      "configurePreset": "stm32h563-release",
+      "name": "stm32h562rgt6-debug",
+      "configurePreset": "stm32h562rgt6-debug",
+      "targets": [
+        "firmware"
+      ]
+    },
+    {
+      "name": "stm32h562rgt6-release",
+      "configurePreset": "stm32h562rgt6-release",
       "targets": [
         "firmware"
       ]
@@ -138,86 +161,100 @@
   ],
   "workflowPresets": [
     {
-      "name": "host-debug",
-      "displayName": "Host Debug (configure + build)",
+      "name": "posix-console",
+      "displayName": "POSIX Console (configure + build)",
       "steps": [
         {
           "type": "configure",
-          "name": "host-debug"
+          "name": "posix-console"
         },
         {
           "type": "build",
-          "name": "host-debug"
+          "name": "posix-console"
         }
       ]
     },
     {
-      "name": "host-release",
-      "displayName": "Host Release (configure + build)",
+      "name": "posix-debug",
+      "displayName": "POSIX Debug (configure + build)",
       "steps": [
         {
           "type": "configure",
-          "name": "host-release"
+          "name": "posix-debug"
         },
         {
           "type": "build",
-          "name": "host-release"
+          "name": "posix-debug"
         }
       ]
     },
     {
-      "name": "stm32h562-debug",
-      "displayName": "STM32H562 Debug (configure + build)",
+      "name": "posix-release",
+      "displayName": "POSIX Release (configure + build)",
       "steps": [
         {
           "type": "configure",
-          "name": "stm32h562-debug"
+          "name": "posix-release"
         },
         {
           "type": "build",
-          "name": "stm32h562-debug"
+          "name": "posix-release"
         }
       ]
     },
     {
-      "name": "stm32h562-release",
-      "displayName": "STM32H562 Release (configure + build)",
+      "name": "stm32h563vit6x-debug",
+      "displayName": "STM32H563VIT6x Debug (configure + build)",
       "steps": [
         {
           "type": "configure",
-          "name": "stm32h562-release"
+          "name": "stm32h563vit6x-debug"
         },
         {
           "type": "build",
-          "name": "stm32h562-release"
+          "name": "stm32h563vit6x-debug"
         }
       ]
     },
     {
-      "name": "stm32h563-debug",
-      "displayName": "STM32H563 Debug (configure + build)",
+      "name": "stm32h563vit6x-release",
+      "displayName": "STM32H563VIT6x Release (configure + build)",
       "steps": [
         {
           "type": "configure",
-          "name": "stm32h563-debug"
+          "name": "stm32h563vit6x-release"
         },
         {
           "type": "build",
-          "name": "stm32h563-debug"
+          "name": "stm32h563vit6x-release"
         }
       ]
     },
     {
-      "name": "stm32h563-release",
-      "displayName": "STM32H563 Release (configure + build)",
+      "name": "stm32h562rgt6-debug",
+      "displayName": "STM32H562RGT6 Debug (configure + build)",
       "steps": [
         {
           "type": "configure",
-          "name": "stm32h563-release"
+          "name": "stm32h562rgt6-debug"
         },
         {
           "type": "build",
-          "name": "stm32h563-release"
+          "name": "stm32h562rgt6-debug"
+        }
+      ]
+    },
+    {
+      "name": "stm32h562rgt6-release",
+      "displayName": "STM32H562RGT6 Release (configure + build)",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "stm32h562rgt6-release"
+        },
+        {
+          "type": "build",
+          "name": "stm32h562rgt6-release"
         }
       ]
     }

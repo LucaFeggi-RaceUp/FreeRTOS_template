@@ -1,0 +1,57 @@
+[board.test]
+gpio_0 = "gpio"
+gpio_1 = "gpio"
+gpio_2 = "gpio"
+gpio_3 = "gpio"
+adc_0 = "adc"
+adc_1 = "adc"
+adc_2 = "adc"
+adc_3 = "adc"
+pwm_0 = "pwm"
+pwm_1 = "pwm"
+pwm_2 = "pwm"
+pwm_3 = "pwm"
+can_0 = "can"
+can_1 = "can"
+can_2 = "can"
+can_3 = "can"
+
+[board.test.can.can_0]
+mailboxes = 32
+fifos = [64, 64]
+
+[board.test.can.can_1]
+mailboxes = 32
+fifos = [64, 64]
+
+[board.test.can.can_2]
+mailboxes = 32
+fifos = [64, 64]
+
+[board.test.can.can_3]
+mailboxes = 32
+fifos = [64, 64]
+
+[peri.gpio]
+gpio_0 = {}
+gpio_1 = {}
+gpio_2 = {}
+gpio_3 = {}
+
+[peri.adc]
+adc_0 = {}
+adc_1 = {}
+adc_2 = {}
+adc_3 = {}
+
+[peri.pwm]
+pwm_0 = { default = "3.3" }
+pwm_1 = { default = "3.3" }
+pwm_2 = { default = "3.3" }
+pwm_3 = { default = "3.3" }
+
+[peri.can]
+can_0 = {}
+can_1 = {}
+can_2 = {}
+can_3 = {}

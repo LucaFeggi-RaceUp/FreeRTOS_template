@@ -3,7 +3,10 @@ cmake_minimum_required(VERSION 3.20)
 ## Instance selection --------
 
 if(NOT DEFINED INSTANCE)
-  message(FATAL_ERROR "Use -DINSTANCE=<host|stm32h563vit6x|stm32h562rgt6>")
+  message(FATAL_ERROR
+    "Use -DINSTANCE=<posix|stm32h563vit6x|stm32h562rgt6> "
+    "and optionally -DDRIVERS_INSTANCE=<console|posix|stm32h5xx>"
+  )
 endif()
 
 # Check if instance is an STM32 target
@@ -23,7 +26,7 @@ if(IS_STM32)
     )
   endif()
 else()
-  # Host instance.
+  # Desktop/POSIX instance.
   set(INSTANCE_DIR ${CMAKE_SOURCE_DIR}/instances/${INSTANCE})
 endif()
 

@@ -4,7 +4,7 @@
 
 namespace ru::driver {
 
-#define WATCHDOG_LIST(X) X(IWDG_0)
+#define WATCHDOG_LIST(X)
 
 DECLARE_ID_ENUM(Watchdog, WATCHDOG_LIST)
 

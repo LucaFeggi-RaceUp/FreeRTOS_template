@@ -4,9 +4,7 @@
 
 namespace ru::driver {
 
-#define NV_MEMORY_LIST(X) \
-  X(BOOT_COUNTER)         \
-  X(SETTINGS)
+#define NV_MEMORY_LIST(X)
 
 DECLARE_ID_ENUM(NvMemory, NV_MEMORY_LIST)
 

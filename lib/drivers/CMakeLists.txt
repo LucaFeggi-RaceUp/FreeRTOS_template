@@ -8,7 +8,9 @@
 #   - INSTANCE: fallback project instance name; mapped when possible
 
 set(_drivers_supported_instances
-  host
+  console
+  debug
+  posix
   stm32h5xx
 )
 
@@ -19,7 +21,7 @@ elseif(DEFINED INSTANCE)
 else()
   message(FATAL_ERROR
     "No driver instance selected. "
-    "Pass -DDRIVERS_INSTANCE=<host|stm32h5xx> "
+    "Pass -DDRIVERS_INSTANCE=<console|posix|stm32h5xx> "
     "or define INSTANCE in the parent project."
   )
 endif()
@@ -29,6 +31,8 @@ set(_drivers_instance "${_drivers_requested_instance}")
 # Map project-level instance names to the driver backend directory when possible.
 if(_drivers_instance MATCHES "^stm32h5")
   set(_drivers_instance "stm32h5xx")
+elseif(_drivers_instance STREQUAL "debug")
+  set(_drivers_instance "console")
 endif()
 
 list(FIND _drivers_supported_instances "${_drivers_instance}" _drivers_instance_index)

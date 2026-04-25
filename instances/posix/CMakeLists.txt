@@ -1,0 +1,41 @@
+set(FREERTOS_KERNEL_SOURCES
+  ${FREERTOS_KERNEL_DIR}/list.c
+  ${FREERTOS_KERNEL_DIR}/queue.c
+  ${FREERTOS_KERNEL_DIR}/tasks.c
+  ${FREERTOS_KERNEL_DIR}/timers.c
+  ${FREERTOS_KERNEL_DIR}/event_groups.c
+  ${FREERTOS_KERNEL_DIR}/stream_buffer.c
+)
+
+set(FREERTOS_PORT_DIR
+  ${FREERTOS_KERNEL_DIR}/portable/ThirdParty/GCC/Posix
+)
+
+set(FREERTOS_PORT_SOURCES
+  ${FREERTOS_PORT_DIR}/port.c
+  ${FREERTOS_PORT_DIR}/utils/wait_for_event.c
+)
+
+find_package(Threads REQUIRED)
+list(APPEND FIRMWARE_LINK_LIBRARIES
+  Threads::Threads
+)
+
+set(FREERTOS_PORT_INCLUDE
+  ${FREERTOS_PORT_DIR}
+)
+
+set(FREERTOS_HEAP_FILE
+  ${FREERTOS_KERNEL_DIR}/portable/MemMang/heap_4.c
+)
+
+set(PLATFORM_MAIN
+  ${CMAKE_SOURCE_DIR}/instances/posix/main.cpp
+  ${CMAKE_SOURCE_DIR}/instances/posix/freertos_impl.c
+)
+
+set(PLATFORM_DEFS
+  FREERTOS_CPU_CLOCK_HZ=3000000000
+  FREERTOS_TICK_RATE_HZ=1000
+  configUSE_PORT_OPTIMISED_TASK_SELECTION=0
+)

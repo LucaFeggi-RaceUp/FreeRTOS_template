@@ -4,7 +4,7 @@
 
 namespace ru::driver {
 
-#define TIMER_LIST(X) X(TIMER_0)
+#define TIMER_LIST(X)
 
 DECLARE_ID_ENUM(Timer, TIMER_LIST)
 
